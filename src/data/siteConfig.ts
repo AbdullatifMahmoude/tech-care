@@ -1,0 +1,96 @@
+export const SITE_CONFIG = {
+  brandName: 'TechCare',
+  brandDisplay: 'Tech Care',
+  pageTitle: 'TechCare | AI-Powered Healthcare Technology Solutions',
+  tagline: 'Smarter tools for modern clinics and medical teams.',
+  footerTagline:
+    'Empowering healthcare with technology, clarity, and compassion. Premium digital tools for smarter medical teams.',
+  heroSubheadline:
+    'Tech Care builds secure, smart, and elegant healthcare experiences that help medical teams operate faster without replacing the human role of doctors.',
+  companyVideo: {
+    embedUrl: 'https://www.youtube.com/embed/ASfrHSx1WSY?rel=0&modestbranding=1',
+    watchUrl: 'https://www.youtube.com/watch?v=ASfrHSx1WSY',
+    title: 'Tech Care Company Video',
+  },
+  partnersSubtitle:
+    'Our ecosystem is backed by partners and programs that believe in modern healthcare innovation.',
+  contactSubtitle:
+    'Send your request and our team will contact you to understand your clinic, idea, or partnership needs.',
+  madaNotice: {
+    badge: 'Coming Soon · Early Access',
+    heading: 'Mada is coming soon',
+    description: 'We are preparing something smart and useful for you. Stay tuned.',
+  },
+  copyright: '© 2026 Tech Care. All rights reserved.',
+  location: 'Smouha, Alexandria, Egypt',
+  shortLocation: 'Alexandria, Egypt',
+  email: 'info@tech-care.tech',
+  phone: '+20 155 330 8298',
+  phoneHref: 'tel:+201553308298',
+  whatsappHref: 'https://wa.me/201553308298',
+  socials: [
+    {
+      id: 'facebook',
+      label: 'Facebook',
+      href: 'https://www.facebook.com/p/Tech-Care-61567769755725/',
+    },
+    {
+      id: 'instagram',
+      label: 'Instagram',
+      href: 'https://www.instagram.com/tech_caree/',
+    },
+    {
+      id: 'linkedin',
+      label: 'LinkedIn',
+      href: 'https://www.linkedin.com/company/ai-powered-healthcare-solutions/',
+    },
+    {
+      id: 'whatsapp',
+      label: 'WhatsApp',
+      href: 'https://wa.me/201553308298',
+    },
+  ],
+  corePillars: [
+    { index: '01', title: 'Secure by design', detail: 'End-to-end encrypted clinical telemetry & strict role boundaries.' },
+    { index: '02', title: 'Medical-grade UX', detail: 'Calm, high-clarity interfaces built for busy clinical shifts.' },
+    { index: '03', title: 'Human doctor first', detail: 'AI augments physician judgment without replacing clinical authority.' },
+    { index: '04', title: 'Scalable cloud backend', detail: 'Ready to connect live AI inference models & managed clinic workflows.' },
+  ],
+  aboutPoints: [
+    'Tech Care is an AI-powered healthtech startup revolutionizing how clinics and healthcare institutions operate and diagnose.',
+    'We provide smart, sustainable, and secure solutions tailored for doctors, clinics, and medical organizations.',
+    'We empower the healthcare sector to be smarter, more efficient, and more sustainable one clinic at a time.',
+  ],
+  sdgs: [
+    {
+      goal: 'Goal 3',
+      title: 'Good Health and Well-being',
+      description: 'Improving clinical diagnostic speed, early anomaly detection, and patient safety.',
+    },
+    {
+      goal: 'Goal 9',
+      title: 'Industry, Innovation, and Infrastructure',
+      description: 'Modernizing healthcare digital infrastructure for Egyptian and regional medical facilities.',
+    },
+    {
+      goal: 'Goal 17',
+      title: 'Partnerships for the Goals',
+      description: 'Collaborating with national initiatives, incubators, and medical organizations.',
+    },
+  ],
+  newsletterCopy: {
+    eyebrow: 'Newsletter',
+    heading: 'Join the Tech Care community.',
+    description: 'Subscribe for healthtech insights, AI updates, and medical innovation news.',
+  },
+} as const;
+
+export const NAV_LINKS = [
+  { path: '/', label: 'Home', isHash: false },
+  { path: '/#mission', label: 'Vision', isHash: true },
+  { path: '/#about', label: 'About Us', isHash: true },
+  { path: '/medi', label: 'Medi', isHash: false },
+  { path: '/mada', label: 'Mada', isHash: false },
+  { path: '/#partners', label: 'Partners', isHash: true },
+  { path: '/#contact', label: 'Contact', isHash: true },
+] as const;
