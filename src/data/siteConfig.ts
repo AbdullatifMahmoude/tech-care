@@ -7,6 +7,7 @@ export const SITE_CONFIG = {
     'Empowering healthcare with technology, clarity, and compassion. Premium digital tools for smarter medical teams.',
   heroSubheadline:
     'Tech Care builds secure, smart, and elegant healthcare experiences that help medical teams operate faster without replacing the human role of doctors.',
+  privacyNote: 'Assists doctors only — no patient data is stored; sessions stay local.',
   companyVideo: {
     embedUrl: 'https://www.youtube.com/embed/ASfrHSx1WSY?rel=0&modestbranding=1',
     watchUrl: 'https://www.youtube.com/watch?v=ASfrHSx1WSY',
@@ -51,10 +52,10 @@ export const SITE_CONFIG = {
     },
   ],
   corePillars: [
-    { index: '01', title: 'Secure by design', detail: 'End-to-end encrypted clinical telemetry & strict role boundaries.' },
-    { index: '02', title: 'Medical-grade UX', detail: 'Calm, high-clarity interfaces built for busy clinical shifts.' },
-    { index: '03', title: 'Human doctor first', detail: 'AI augments physician judgment without replacing clinical authority.' },
-    { index: '04', title: 'Scalable cloud backend', detail: 'Ready to connect live AI inference models & managed clinic workflows.' },
+    { index: '01', title: 'Secure by design' },
+    { index: '02', title: 'Medical-grade UX' },
+    { index: '03', title: 'Human doctor first' },
+    { index: '04', title: 'Scalable cloud backend' },
   ],
   aboutPoints: [
     'Tech Care is an AI-powered healthtech startup revolutionizing how clinics and healthcare institutions operate and diagnose.',
@@ -65,17 +66,14 @@ export const SITE_CONFIG = {
     {
       goal: 'Goal 3',
       title: 'Good Health and Well-being',
-      description: 'Improving clinical diagnostic speed, early anomaly detection, and patient safety.',
     },
     {
       goal: 'Goal 9',
       title: 'Industry, Innovation, and Infrastructure',
-      description: 'Modernizing healthcare digital infrastructure for Egyptian and regional medical facilities.',
     },
     {
       goal: 'Goal 17',
       title: 'Partnerships for the Goals',
-      description: 'Collaborating with national initiatives, incubators, and medical organizations.',
     },
   ],
   newsletterCopy: {
@@ -87,7 +85,6 @@ export const SITE_CONFIG = {
 
 export const NAV_LINKS = [
   { path: '/', label: 'Home', isHash: false },
-  { path: '/#mission', label: 'Vision', isHash: true },
   { path: '/#about', label: 'About Us', isHash: true },
   { path: '/medi', label: 'Medi', isHash: false },
   { path: '/mada', label: 'Mada', isHash: false },

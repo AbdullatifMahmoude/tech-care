@@ -70,19 +70,19 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     document.documentElement.classList.add('dark');
   });
 
-  it('LandingPage renders 7 minimal 3D chapters, removes Hero pill badge, attaches 3D stage/tilt containers, shows authentic pillars/SDGs/YouTube video, switches Medi EN/AR preview & System pills, and opens/closes PartnerModal', () => {
+  it('LandingPage renders 6 editorial 3D chapters, shows concise pillars/SDGs/YouTube video & local-only note, removes fabricated EHR pills, switches Medi EN/AR preview, and opens/closes PartnerModal', () => {
     renderWithRouter(<LandingPage />, '/');
 
     expect(screen.queryByText(/AI Healthcare Platform/i)).not.toBeInTheDocument();
-    expect(document.querySelectorAll('[data-spatial-variant]').length).toBe(7);
+    expect(document.querySelectorAll('[data-spatial-variant]').length).toBe(6);
     expect(document.querySelectorAll('[data-spatial-item]').length).toBeGreaterThanOrEqual(15);
-    expect(document.querySelectorAll('[data-tilt-card="true"]').length).toBeGreaterThanOrEqual(4);
     expect(screen.getByText(/Intelligence for/i)).toBeInTheDocument();
-    expect(screen.getByText(/01 \/ Vision/i)).toBeInTheDocument();
+    expect(screen.getByText(/Technology that supports/i)).toBeInTheDocument();
     expect(screen.getByText(/Secure by design/i)).toBeInTheDocument();
     expect(screen.getByText(/Medical-grade UX/i)).toBeInTheDocument();
     expect(screen.getByText(/Human doctor first/i)).toBeInTheDocument();
     expect(screen.getByText(/Scalable cloud backend/i)).toBeInTheDocument();
+    expect(screen.getByText(/no patient data is stored; sessions stay local/i)).toBeInTheDocument();
     expect(screen.getByText(/02 \/ About Tech Care/i)).toBeInTheDocument();
     expect(screen.getByText(/UN SDGs 3 · 9 · 17/i)).toBeInTheDocument();
     expect(screen.getByText(/Goal 3/i)).toBeInTheDocument();
@@ -91,18 +91,13 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(videoFrame.tagName).toBe('IFRAME');
     expect(videoFrame.getAttribute('src')).toContain('youtube.com/embed/ASfrHSx1WSY');
 
-    // Confirm temporary Hero sculpture preview switcher is removed
-    expect(
-      screen.queryByRole('tablist', { name: 'Hero 3D Sculpture Preview' }),
-    ).not.toBeInTheDocument();
+    // Confirm fabricated EHR / Digital Twin buttons are removed
+    expect(screen.queryByRole('button', { name: 'Digital Twin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'EHR' })).not.toBeInTheDocument();
 
     // Switch Medi bilingual preview
     fireEvent.click(screen.getByRole('button', { name: 'حالة بالعربي' }));
     expect(screen.getByText(/ملخص التقييم السريري المبدئي/i)).toBeInTheDocument();
-
-    // Switch clinical infrastructure pills
-    fireEvent.click(screen.getByRole('button', { name: 'Digital Twin' }));
-    expect(screen.getByText(/Continuous patient and ward physiological baseline model/i)).toBeInTheDocument();
 
     // Partner Modal on real partner
     const hayatCards = screen.getAllByText('حياة كريمة');
@@ -152,7 +147,6 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
       '/',
     );
 
-    expect(screen.getByRole('link', { name: 'Vision' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'About Us' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Medi' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mada' })).toBeInTheDocument();

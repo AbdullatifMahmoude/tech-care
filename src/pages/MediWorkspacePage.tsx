@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useScene } from '../context/SceneContext';
 import { isLiveAiConfigured, sendClinicalQuery } from '../services/aiClient';
-import { getSavedCases, saveCases } from '../services/authService';
+import { clearSavedCases, getSavedCases, saveCases } from '../services/authService';
 import type { ChatMessage, ClinicalCase } from '../types/techcare';
 
 const STARTER_PROMPTS = [
@@ -158,44 +158,58 @@ export default function MediWorkspacePage() {
               </button>
             </div>
 
-            {/* Guest Mode / Signed-in Status Banner (Matches tech-care.tech/medi) */}
+            {/* Guest Mode / Signed-in Status Banner */}
             {session ? (
               <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4">
                 <div className="flex items-center gap-2 text-xs font-bold text-success">
                   <UserCheck className="h-4 w-4" />
-                  <span>Signed in · {session.role}</span>
+                  <span>Local session · {session.role}</span>
                 </div>
                 <p className="mt-1 text-xs text-on-surface-variant">
-                  Clinical case history is synced locally for <strong className="text-on-surface">{session.name}</strong>.
+                  Local session active for <strong className="text-on-surface">{session.name}</strong> — no patient data is stored on servers.
                 </p>
               </div>
             ) : (
               <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4">
-                <span className="block text-xs font-bold text-primary">Guest mode</span>
+                <span className="block text-xs font-bold text-primary">Local demo mode</span>
                 <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">
-                  You can explore Medi right away in demo mode, or sign in to save and sync your clinical case history across sessions.
+                  Explore Medi directly. All sessions stay local in your browser — Tech Care does not store patient or client data.
                 </p>
                 <button
                   type="button"
                   onClick={openAuthModal}
                   className="mt-3 w-full rounded-full bg-primary px-4 py-2 text-xs font-bold text-on-primary hover:bg-primary-fixed cursor-pointer"
                 >
-                  Create Account / Sign in
+                  Sign in (Local Session)
                 </button>
               </div>
             )}
 
-            {/* Case History */}
+            {/* Local Case Thread */}
             <div>
-              <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-outline">
-                <History className="h-3.5 w-3.5" />
-                <span>History</span>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-outline">
+                  <History className="h-3.5 w-3.5" />
+                  <span>Local Session</span>
+                </div>
+                {cases.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearSavedCases();
+                      setCases([]);
+                      setActiveCaseId(null);
+                      setDraftMessages([]);
+                    }}
+                    className="text-[11px] font-semibold text-outline hover:text-error cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
               {cases.length === 0 ? (
                 <p className="rounded-xl border border-outline-variant/25 bg-surface-container/50 p-3 text-xs text-on-surface-variant">
-                  {session
-                    ? 'No saved clinical cases yet. Start a case on the right.'
-                    : 'Sign in or start a session to inspect your clinical case threads.'}
+                  No local session threads yet. Start a clinical case on the right.
                 </p>
               ) : (
                 <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
@@ -236,7 +250,7 @@ export default function MediWorkspacePage() {
                 <span className="text-primary">Medi</span> — The Physician&apos;s Personal Clinical Assistant
               </h2>
               <p className="text-xs text-on-surface-variant">
-                Bilingual clinical reasoning · Human doctor first decision support
+                Bilingual clinical reasoning · Assists doctors only · Local session
               </p>
             </div>
 

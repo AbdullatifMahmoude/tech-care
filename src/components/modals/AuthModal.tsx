@@ -34,12 +34,12 @@ export function AuthModal() {
       <div className="modal-surface relative z-10 max-h-[90svh] w-full max-w-md overflow-y-auto rounded-3xl p-5 sm:p-8 backdrop-blur-2xl">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/assets/techcare-logo.png" alt="Tech Care" className="h-10 w-10 rounded-full object-cover ring-1 ring-primary/40" />
+            <img src={`${import.meta.env.BASE_URL}assets/techcare-logo.png`} alt="Tech Care" className="h-10 w-10 rounded-full object-cover ring-1 ring-primary/40" />
             <div>
               <h3 id="auth-modal-title" className="font-headline-sm text-lg font-bold text-on-surface">
                 Sign in to Tech Care
               </h3>
-              <p className="text-xs text-on-surface-variant">Save Medi clinical cases &amp; sync workspace history.</p>
+              <p className="text-xs text-on-surface-variant">Local clinician session — no patient data is stored on Tech Care servers.</p>
             </div>
           </div>
           <button
@@ -104,7 +104,7 @@ export function AuthModal() {
 
           <div className="flex items-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-[11px] text-on-surface-variant">
             <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
-            <span>Demo workspace session stored locally; ready to hook to OAuth / JWT backend via VITE_API_BASE_URL.</span>
+            <span>Your session stays strictly local in this browser. Tech Care assists doctors without saving patient or client data.</span>
           </div>
 
           <button

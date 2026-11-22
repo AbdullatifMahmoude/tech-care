@@ -56,3 +56,11 @@ export function saveCases(cases: ClinicalCase[]): void {
     // Ignore storage restriction
   }
 }
+
+export function clearSavedCases(): void {
+  try {
+    localStorage.removeItem(CASES_KEY);
+  } catch {
+    // Ignore storage restriction
+  }
+}

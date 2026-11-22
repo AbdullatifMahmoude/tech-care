@@ -52,7 +52,7 @@ function PageLoader() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <SceneProvider>
         <ScrollHandler />
         <div className="relative flex min-h-screen flex-col bg-background text-on-surface">

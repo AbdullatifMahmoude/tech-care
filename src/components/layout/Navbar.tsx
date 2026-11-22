@@ -16,7 +16,7 @@ export function Navbar() {
         <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group" onClick={() => setMobileOpen(false)}>
           <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white p-0.5 ring-1 ring-primary/40 shadow-[0_2px_12px_rgba(0,125,117,0.18)]">
             <img
-              src="/assets/techcare-logo.png"
+              src={`${import.meta.env.BASE_URL}assets/techcare-logo.png`}
               alt="Tech Care Logo"
               className="h-full w-full rounded-full object-contain"
             />
@@ -25,7 +25,7 @@ export function Navbar() {
             <span className="font-headline-sm text-base sm:text-lg font-bold tracking-tight text-on-surface uppercase">
               Tech<span className="text-primary">Care</span>
             </span>
-            <span className="relative flex h-2 w-2 shrink-0" title="Clinical Telemetry Online">
+            <span className="relative flex h-2 w-2 shrink-0" title="Tech Care Online">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>

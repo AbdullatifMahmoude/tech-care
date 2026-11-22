@@ -1,5 +1,7 @@
 import type { Partner } from '../types/techcare';
 
+const ASSET_BASE = import.meta.env.BASE_URL;
+
 export const REAL_PARTNERS: Partner[] = [
   {
     id: 'microsoft',
@@ -9,12 +11,12 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Global AI & Cloud Infrastructure',
     status: 'Verified Ecosystem Supporter',
     description:
-      'Tech Care participates in the Microsoft for Startups Founders Hub, utilizing resilient cloud compute, healthcare-ready APIs, and scalable inference infrastructure to power Medi and clinical workflows.',
+      'Supporting Tech Care inside the Microsoft for Startups Founders Hub with resilient cloud compute and scalable AI tooling.',
     tier: 'Founders Hub',
     scope: 'Cloud & AI Infrastructure',
     compliance: 'Enterprise Cloud Ready',
     outboundUrl: 'https://www.microsoft.com/startups',
-    logoSrc: '/assets/partners/14.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/14.jpg`,
     emblemType: 'microsoft',
   },
   {
@@ -26,11 +28,11 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'National Innovation & R&D Support',
     status: 'Verified Program Supporter',
     description:
-      'Supported by the Innovators Support Fund (ISF — صندوق رعاية المبتكرين والنوابغ), backing applied Egyptian scientific innovation, clinical research commercialization, and healthcare engineering talent.',
+      'Backing applied Egyptian scientific innovation, clinical research commercialization, and healthcare engineering talent.',
     tier: 'National R&D Backing',
     scope: 'Egypt Healthcare Innovation',
     compliance: 'Academic & Clinical R&D',
-    logoSrc: '/assets/partners/19.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/19.jpg`,
     emblemType: 'isf',
   },
   {
@@ -41,12 +43,12 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Venture Acceleration',
     status: 'Verified Ecosystem Partner',
     description:
-      'Backed by alx Venture, connecting Tech Care with high-velocity product mentorship, engineering leadership networks, and pan-regional healthcare technology scaling pathways.',
+      'Connecting Tech Care with product mentorship, engineering leadership networks, and regional scaling pathways.',
     tier: 'Venture Cohort',
     scope: 'MENA & Africa Scale',
     compliance: 'Founder Acceleration',
     outboundUrl: 'https://www.alxafrica.com',
-    logoSrc: '/assets/partners/20.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/20.jpg`,
     emblemType: 'alx',
   },
   {
@@ -57,12 +59,12 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Incubation & Market Readiness',
     status: 'Verified Incubation Partner',
     description:
-      'Incubated within Orange Corners Egypt, strengthening Tech Care’s sustainable clinic business model, hospital go-to-market strategy, and SDG-aligned healthcare impact.',
+      'Strengthening Tech Care’s sustainable healthtech business model and SDG-aligned medical impact in Egypt.',
     tier: 'Egypt Incubation',
     scope: 'Alexandria & Cairo',
     compliance: 'UN SDG Impact Aligned',
     outboundUrl: 'https://orangecorners.com/country/egypt/',
-    logoSrc: '/assets/partners/21.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/21.jpg`,
     emblemType: 'orangecorners',
   },
   {
@@ -73,11 +75,11 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Clinical & Medical Education',
     status: 'Verified Medical Community Partner',
     description:
-      'Partnering with IFMSA-EGYPT to bridge next-generation Egyptian physicians and medical students with practical AI clinical assistants, case reasoning tools, and digital health literacy.',
+      'Connecting next-generation physicians and medical students with practical AI decision-support tools and digital health literacy.',
     tier: 'Medical Federation',
     scope: 'Nationwide Medical Faculties',
     compliance: 'Clinical Education Ethics',
-    logoSrc: '/assets/partners/16.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/16.jpg`,
     emblemType: 'ifmsa',
   },
   {
@@ -89,12 +91,12 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Institutional & Knowledge Partner',
     status: 'Verified Regional Supporter',
     description:
-      'Anchored in Alexandria alongside Bibliotheca Alexandrina’s scientific and entrepreneurship ecosystem, fostering multidisciplinary collaboration between physicians, researchers, and AI engineers.',
+      'Fostering multidisciplinary collaboration in Alexandria between physicians, researchers, and AI engineers.',
     tier: 'Institutional Supporter',
     scope: 'Alexandria, Egypt',
     compliance: 'Research & Innovation Hub',
     outboundUrl: 'https://www.bibalex.org',
-    logoSrc: '/assets/partners/11.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/11.jpg`,
     emblemType: 'bibliotheca',
   },
   {
@@ -106,11 +108,11 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Community Health & Civil Impact',
     status: 'Verified Impact Supporter',
     description:
-      'Aligned with The National Alliance to bring efficient, accessible digital triage and clinical coordination tools to high-volume community health initiatives and medical convoys.',
+      'Aligned to bring accessible physician support tools to community health initiatives and medical convoys.',
     tier: 'National Impact',
     scope: 'Community Clinics',
     compliance: 'SDG 3 & 17 Aligned',
-    logoSrc: '/assets/partners/12.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/12.jpg`,
     emblemType: 'nationalalliance',
   },
   {
@@ -122,11 +124,11 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'National Healthcare Access',
     status: 'Verified Ecosystem Supporter',
     description:
-      'Supporting community-centered healthcare modernization aligned with حياة كريمة (Decent Life), helping extend rapid diagnostic workflows and physician support to underserved clinics.',
+      'Supporting community-centered healthcare modernization aligned with حياة كريمة (Decent Life) across Egypt.',
     tier: 'Community Healthcare',
     scope: 'Egypt Rural & Urban Clinics',
     compliance: 'Sustainable Care Access',
-    logoSrc: '/assets/partners/13.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/13.jpg`,
     emblemType: 'hayatkarima',
   },
   {
@@ -137,11 +139,11 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Regional Entrepreneurship',
     status: 'Verified Regional Supporter',
     description:
-      'Collaborating with E-Club Matrouh to expand healthcare technology awareness, youth innovation programs, and regional clinic digitization beyond metropolitan hubs.',
+      'Expanding healthcare technology awareness and youth innovation beyond metropolitan hubs.',
     tier: 'Regional Network',
     scope: 'Matrouh & North Coast',
     compliance: 'Regional Tech Empowerment',
-    logoSrc: '/assets/partners/18.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/18.jpg`,
     emblemType: 'eclub',
   },
   {
@@ -153,11 +155,11 @@ export const REAL_PARTNERS: Partner[] = [
     category: 'Public Sector Supporter',
     status: 'Verified Institutional Supporter',
     description:
-      'Supported through DYS — Ministry Of Youth And Sports innovation initiatives, empowering young Egyptian healthcare founders to transform clinic workflows with responsible AI.',
+      'Empowering young Egyptian healthcare founders to transform clinic workflows with responsible AI.',
     tier: 'Public Ecosystem Support',
     scope: 'National Youth Innovation',
     compliance: 'Public Innovation Charter',
-    logoSrc: '/assets/partners/22.jpg',
+    logoSrc: `${ASSET_BASE}assets/partners/22.jpg`,
     emblemType: 'dys',
   },
 ];
