@@ -1,37 +1,52 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
+  ArrowUp,
+  Check,
+  Copy,
   FileDown,
-  History,
+  FlaskConical,
+  HeartPulse,
   MessageSquarePlus,
-  Send,
+  PanelLeft,
   ShieldAlert,
-  Sparkles,
   Stethoscope,
-  UserCheck,
+  Trash2,
+  User,
+  Wind,
+  X,
 } from 'lucide-react';
 import { useScene } from '../context/SceneContext';
-import { isLiveAiConfigured, sendClinicalQuery } from '../services/aiClient';
+import { sendClinicalQuery } from '../services/aiClient';
 import { clearSavedCases, getSavedCases, saveCases } from '../services/authService';
 import type { ChatMessage, ClinicalCase } from '../types/techcare';
 import { TechCareLoader } from '../components/ui/TechCareLoader';
 
 const STARTER_PROMPTS = [
   {
-    label: 'Acute dyspnea differential',
+    label: 'Acute dyspnea',
+    Icon: Wind,
     prompt:
       '45F with 3-day progressive dyspnea, HR 108 bpm, BP 112/70, SpO2 92% on room air, mild pedal edema. Outline immediate differentials and first-hour workup.',
   },
   {
-    label: 'حالة ألم بالصدر (Arabic)',
+    label: 'ألم بالصدر',
+    Icon: HeartPulse,
     prompt:
       'مريض 54 سنة يعاني من ألم ضاغط في الصدر منذ ساعتين مع تعرق، الضغط 145/90 والنبض 98. ما هي الخطوات التشخيصية العاجلة؟',
   },
   {
-    label: 'Renal dosing & lab check',
+    label: 'Renal dosing',
+    Icon: FlaskConical,
     prompt:
       '68M eGFR dropped from 62 to 38 mL/min with Cr 1.9 mg/dL, currently on Metformin 1000mg BID and Lisinopril 10mg. Suggest safe medication adjustments.',
   },
-];
+] as const;
+
+const URGENCY_STYLES: Record<'Routine' | 'Priority' | 'Urgent', string> = {
+  Routine: 'border-outline-variant/40 bg-surface-container text-on-surface-variant',
+  Priority: 'border-amber-400/35 bg-amber-400/10 text-amber-400',
+  Urgent: 'border-error/40 bg-error-container/25 text-error',
+};
 
 export default function MediWorkspacePage() {
   const { setRouteScene, session, openAuthModal } = useScene();
@@ -41,6 +56,11 @@ export default function MediWorkspacePage() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setRouteScene('ambient-2d');
@@ -49,10 +69,35 @@ export default function MediWorkspacePage() {
   const activeCase = cases.find((c) => c.id === activeCaseId) ?? null;
   const visibleMessages = activeCase ? activeCase.messages : draftMessages;
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
+  }, [visibleMessages.length, sending]);
+
   const startNewCase = () => {
     setActiveCaseId(null);
     setDraftMessages([]);
     setError('');
+    setMobileSidebarOpen(false);
+  };
+
+  const handleCopy = async (id: string, content: string) => {
+    try {
+      await navigator.clipboard?.writeText?.(content);
+      setCopiedId(id);
+      window.setTimeout(() => {
+        setCopiedId((prev) => (prev === id ? null : prev));
+      }, 1600);
+    } catch {
+      // Ignore clipboard restriction
+    }
+  };
+
+  const handleToggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setMobileSidebarOpen((v) => !v);
+    } else {
+      setDesktopSidebarOpen((v) => !v);
+    }
   };
 
   const handleSend = async (e?: FormEvent, overrideText?: string) => {
@@ -112,7 +157,7 @@ export default function MediWorkspacePage() {
       } else {
         const newCase: ClinicalCase = {
           id: `case-${Date.now().toString(36)}`,
-          title: text.slice(0, 48) + (text.length > 48 ? '...' : ''),
+          title: text.slice(0, 44) + (text.length > 44 ? '...' : ''),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           messages: finalMessages,
@@ -130,268 +175,367 @@ export default function MediWorkspacePage() {
     }
   };
 
-  return (
-    <div className="relative z-10 mx-auto flex min-h-[calc(100svh-5rem)] w-full max-w-[1600px] flex-col px-4 sm:px-6 md:px-margin-desktop py-4 sm:py-6 text-on-surface">
-      <div className="grid flex-1 grid-cols-1 gap-5 lg:gap-6 lg:grid-cols-12">
-        {/* Left Clinical Sidebar */}
-        <aside className="no-print order-2 lg:order-1 lg:col-span-3 flex flex-col justify-between rounded-3xl border border-outline-variant/35 bg-surface-container-low/85 p-4 sm:p-5 backdrop-blur-xl">
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Stethoscope className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-outline">
-                    Clinical workspace
-                  </span>
-                  <h1 className="font-headline-sm text-base font-bold text-on-surface">Medi</h1>
-                </div>
-              </div>
+  const renderSidebarBody = () => (
+    <div className="flex h-full flex-col justify-between p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <Stethoscope className="h-4 w-4" />
+            </div>
+            <span className="font-headline-sm text-sm font-bold tracking-tight text-on-surface">Medi</span>
+          </div>
 
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={startNewCase}
+              aria-label="New case"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary cursor-pointer"
+            >
+              <MessageSquarePlus className="h-3.5 w-3.5" />
+              <span>New</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(false)}
+              aria-label="Close case history"
+              className="rounded-lg p-1.5 text-on-surface-variant hover:text-on-surface lg:hidden cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="mb-2 flex items-center justify-between px-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-outline">Cases</span>
+            {cases.length > 0 && (
               <button
                 type="button"
-                onClick={startNewCase}
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-bold text-on-primary hover:bg-primary-fixed cursor-pointer"
+                onClick={() => {
+                  clearSavedCases();
+                  setCases([]);
+                  setActiveCaseId(null);
+                  setDraftMessages([]);
+                }}
+                aria-label="Clear cases"
+                className="inline-flex items-center gap-1 text-[11px] text-outline transition-colors hover:text-error cursor-pointer"
               >
-                <MessageSquarePlus className="h-3.5 w-3.5" />
-                <span>New</span>
+                <Trash2 className="h-3 w-3" />
+                <span>Clear</span>
               </button>
+            )}
+          </div>
+
+          {cases.length === 0 ? (
+            <p className="px-1 py-2 text-xs text-outline">No cases yet</p>
+          ) : (
+            <div className="flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1">
+              {cases.map((c) => {
+                const isActive = c.id === activeCaseId;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveCaseId(c.id);
+                      setMobileSidebarOpen(false);
+                    }}
+                    className={`w-full rounded-xl px-3 py-2.5 text-left text-xs transition-colors cursor-pointer ${
+                      isActive
+                        ? 'bg-primary/14 font-semibold text-on-surface ring-1 ring-primary/35'
+                        : 'text-on-surface-variant hover:bg-surface-container/60 hover:text-on-surface'
+                    }`}
+                  >
+                    <span className="block truncate">{c.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Compact Session Footer */}
+      <div className="mt-4 border-t border-outline-variant/25 pt-3">
+        {session ? (
+          <div className="flex items-center justify-between gap-2 px-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                {session.name.charAt(0).toUpperCase()}
+              </div>
+              <span className="truncate text-xs font-medium text-on-surface">{session.name}</span>
+            </div>
+            <span className="shrink-0 rounded-full border border-outline-variant/35 px-2 py-0.5 text-[10px] font-medium text-on-surface-variant">
+              {session.role}
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={openAuthModal}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/35 py-2 text-xs font-semibold text-on-surface-variant transition-colors hover:border-primary/50 hover:text-on-surface cursor-pointer"
+          >
+            <User className="h-3.5 w-3.5" />
+            <span>Sign in</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative z-10 mx-auto flex h-[calc(100svh-4.5rem)] w-full max-w-[1520px] flex-col px-3 sm:px-6 md:px-margin-desktop py-3 sm:py-5 text-on-surface">
+      <div className="medi-shell relative flex min-h-0 flex-1 overflow-hidden rounded-[24px]">
+        {/* Desktop Collapsible Sidebar */}
+        <aside
+          className={`no-print hidden lg:flex shrink-0 flex-col border-r transition-[width,opacity] duration-200 ${
+            desktopSidebarOpen ? 'medi-sidebar w-72 opacity-100' : 'w-0 overflow-hidden border-r-0 opacity-0'
+          }`}
+        >
+          {renderSidebarBody()}
+        </aside>
+
+        {/* Mobile Drawer Overlay */}
+        {mobileSidebarOpen && (
+          <div className="no-print fixed inset-0 z-50 flex lg:hidden">
+            <div
+              className="fixed inset-0 bg-background/70 backdrop-blur-sm"
+              onClick={() => setMobileSidebarOpen(false)}
+            />
+            <aside className="medi-sidebar relative z-10 h-full w-72 border-r shadow-2xl">
+              {renderSidebarBody()}
+            </aside>
+          </div>
+        )}
+
+        {/* Main Editorial AI Canvas */}
+        <section className="relative flex min-w-0 flex-1 flex-col">
+          {/* Minimal Top Bar */}
+          <header className="flex h-13 shrink-0 items-center justify-between gap-3 border-b border-outline-variant/20 px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleToggleSidebar}
+                aria-label="Toggle case history"
+                className="rounded-lg p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container/70 hover:text-on-surface cursor-pointer"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </button>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span className="truncate text-sm font-semibold text-on-surface">
+                  {activeCase ? activeCase.title : 'Medi'}
+                </span>
+              </div>
             </div>
 
-            {/* Guest Mode / Signed-in Status Banner */}
-            {session ? (
-              <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-success">
-                  <UserCheck className="h-4 w-4" />
-                  <span>Local session · {session.role}</span>
-                </div>
-                <p className="mt-1 text-xs text-on-surface-variant">
-                  Local session active for <strong className="text-on-surface">{session.name}</strong> — no patient data is stored on servers.
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4">
-                <span className="block text-xs font-bold text-primary">Local demo mode</span>
-                <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">
-                  Explore Medi directly. All sessions stay local in your browser — Tech Care does not store patient or client data.
-                </p>
+            {visibleMessages.length > 0 && (
+              <div className="no-print flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={openAuthModal}
-                  className="mt-3 w-full rounded-full bg-primary px-4 py-2 text-xs font-bold text-on-primary hover:bg-primary-fixed cursor-pointer"
+                  onClick={startNewCase}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/35 px-2.5 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary/45 hover:text-on-surface cursor-pointer"
                 >
-                  Sign in (Local Session)
+                  <MessageSquarePlus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">New</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  aria-label="Export PDF plan"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/35 px-2.5 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary/45 hover:text-on-surface cursor-pointer"
+                >
+                  <FileDown className="h-3.5 w-3.5 text-primary" />
+                  <span>PDF</span>
                 </button>
               </div>
             )}
+          </header>
 
-            {/* Local Case Thread */}
-            <div>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-outline">
-                  <History className="h-3.5 w-3.5" />
-                  <span>Local Session</span>
-                </div>
-                {cases.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearSavedCases();
-                      setCases([]);
-                      setActiveCaseId(null);
-                      setDraftMessages([]);
-                    }}
-                    className="text-[11px] font-semibold text-outline hover:text-error cursor-pointer"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              {cases.length === 0 ? (
-                <p className="rounded-xl border border-outline-variant/25 bg-surface-container/50 p-3 text-xs text-on-surface-variant">
-                  No local session threads yet. Start a clinical case on the right.
-                </p>
-              ) : (
-                <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                  {cases.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setActiveCaseId(c.id)}
-                      className={`w-full rounded-xl border p-3 text-left text-xs transition-all cursor-pointer ${
-                        c.id === activeCaseId
-                          ? 'border-primary/60 bg-primary/15 font-semibold text-on-surface'
-                          : 'border-outline-variant/25 bg-surface-container/50 text-on-surface-variant hover:border-outline-variant/60'
-                      }`}
-                    >
-                      <span className="block truncate">{c.title}</span>
-                      <span className="mt-1 block text-[10px] text-outline">
-                        {c.messages.length} messages
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest/70 p-3 text-[11px] text-on-surface-variant">
-            <strong className="text-primary">AI Endpoint:</strong>{' '}
-            {isLiveAiConfigured() ? 'Connected via VITE_AI_API_URL' : 'Demo Simulation Engine (connect VITE_AI_API_URL for live LLM)'}
-          </div>
-        </aside>
-
-        {/* Main Clinical Case Area */}
-        <section className="order-1 lg:order-2 lg:col-span-9 min-h-[62svh] lg:min-h-[calc(100vh-8rem)] flex flex-col rounded-3xl border border-outline-variant/40 bg-surface-container-low/85 shadow-2xl backdrop-blur-xl">
-          {/* Top Workspace Header */}
-          <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 border-b border-outline-variant/25 px-4 sm:px-6 py-3.5 sm:py-4">
-            <div>
-              <h2 className="font-headline-sm text-lg font-bold text-on-surface">
-                <span className="text-primary">Medi</span> — The Physician&apos;s Personal Clinical Assistant
-              </h2>
-              <p className="text-xs text-on-surface-variant">
-                Bilingual clinical reasoning · Assists doctors only · Local session
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="no-print inline-flex items-center gap-2 rounded-full border border-outline-variant/50 bg-surface-container/80 px-4 py-2 text-xs font-semibold text-on-surface transition-colors hover:border-primary/60 hover:text-primary cursor-pointer"
-            >
-              <FileDown className="h-4 w-4 text-primary" />
-              <span>PDF Plan</span>
-            </button>
-          </div>
-
-          {/* Messages or Empty Start Screen */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {/* Messages / Empty Canvas */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-8 py-6">
             {visibleMessages.length === 0 ? (
-              <div className="mx-auto flex max-w-2xl flex-col items-center py-10 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/40 bg-primary/15 text-primary shadow-[0_8px_24px_-6px_rgba(0,125,117,0.22)]">
-                  <Sparkles className="h-8 w-8" />
-                </div>
-                <h3 className="mt-6 font-headline-md text-2xl sm:text-3xl font-bold text-on-surface">
-                  Start a clinical case
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
-                  Send symptoms, history, vitals, labs, imaging notes, or clinical questions. Medi will answer in the same language you use.
-                </p>
+              <div className="relative mx-auto flex h-full max-w-2xl flex-col items-center justify-center py-8 text-center">
+                <div className="medi-aurora pointer-events-none absolute h-64 w-64 rounded-full blur-2xl" aria-hidden="true" />
 
-                <div className="mt-8 grid w-full grid-cols-1 gap-3 sm:grid-cols-3 text-left">
-                  {STARTER_PROMPTS.map((item) => (
+                <div className="medi-orb relative flex h-16 w-16 items-center justify-center rounded-2xl text-primary">
+                  <Stethoscope className="h-7 w-7" />
+                </div>
+
+                <h1 className="relative mt-6 font-headline-md text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">
+                  Start a clinical case
+                </h1>
+
+                <div className="relative mt-7 flex flex-wrap items-center justify-center gap-2.5">
+                  {STARTER_PROMPTS.map(({ label, Icon, prompt }) => (
                     <button
-                      key={item.label}
+                      key={label}
                       type="button"
-                      onClick={() => handleSend(undefined, item.prompt)}
-                      className="rounded-2xl border border-outline-variant/40 bg-surface-container/75 p-4 transition-all hover:border-primary/60 cursor-pointer"
+                      onClick={() => handleSend(undefined, prompt)}
+                      className="medi-chip inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium text-on-surface cursor-pointer"
                     >
-                      <span className="block text-xs font-bold text-primary">{item.label}</span>
-                      <span className="mt-1.5 line-clamp-3 block text-[11px] leading-relaxed text-on-surface-variant">
-                        {item.prompt}
-                      </span>
+                      <Icon className="h-3.5 w-3.5 text-primary" />
+                      <span>{label}</span>
                     </button>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="space-y-5">
-                {visibleMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      dir={msg.language === 'ar' ? 'rtl' : 'ltr'}
-                      className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-4 sm:p-5 text-sm leading-relaxed ${
-                        msg.role === 'user'
-                          ? 'rounded-tr-sm bg-primary text-on-primary font-medium'
-                          : 'rounded-tl-sm border border-outline-variant/40 bg-surface-container/90 text-on-surface'
-                      }`}
-                    >
-                      <div className="whitespace-pre-line">{msg.content}</div>
+              <div className="mx-auto max-w-3xl space-y-6">
+                {visibleMessages.map((msg) => {
+                  const isUser = msg.role === 'user';
+                  const isRtl = msg.language === 'ar';
 
-                      {msg.structuredSummary && msg.structuredSummary.differentials && msg.structuredSummary.differentials.length > 0 && (
-                        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-outline-variant/25 pt-3 sm:grid-cols-2 text-xs">
-                          <div>
-                            <span className="block font-bold uppercase tracking-wider text-primary">
-                              Key Considerations
-                            </span>
-                            <ul className="mt-1 list-disc pl-4 space-y-1 text-on-surface-variant">
-                              {msg.structuredSummary.differentials.map((d) => (
-                                <li key={d}>{d}</li>
-                              ))}
-                            </ul>
-                          </div>
-                          {msg.structuredSummary.recommendedNextSteps && (
-                            <div>
-                              <span className="block font-bold uppercase tracking-wider text-secondary">
-                                Next Steps
-                              </span>
-                              <ul className="mt-1 list-disc pl-4 space-y-1 text-on-surface-variant">
-                                {msg.structuredSummary.recommendedNextSteps.map((s) => (
-                                  <li key={s}>{s}</li>
-                                ))}
-                              </ul>
+                  if (isUser) {
+                    return (
+                      <div key={msg.id} className="flex justify-end">
+                        <div
+                          dir={isRtl ? 'rtl' : 'ltr'}
+                          className="medi-user-msg max-w-[88%] sm:max-w-[78%] rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed"
+                        >
+                          <div className="whitespace-pre-line">{msg.content}</div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <article key={msg.id} className="flex items-start gap-3 sm:gap-3.5">
+                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25">
+                        <Stethoscope className="h-3.5 w-3.5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-3" dir={isRtl ? 'rtl' : 'ltr'}>
+                        {msg.structuredSummary?.urgency && (
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                              URGENCY_STYLES[msg.structuredSummary.urgency]
+                            }`}
+                          >
+                            {msg.structuredSummary.urgency}
+                          </span>
+                        )}
+
+                        <div className="whitespace-pre-line text-sm leading-7 text-on-surface">
+                          {msg.content}
+                        </div>
+
+                        {msg.structuredSummary &&
+                          ((msg.structuredSummary.differentials?.length ?? 0) > 0 ||
+                            (msg.structuredSummary.recommendedNextSteps?.length ?? 0) > 0) && (
+                            <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2 text-xs">
+                              {msg.structuredSummary.differentials &&
+                                msg.structuredSummary.differentials.length > 0 && (
+                                  <div className="medi-summary-card rounded-xl p-3.5">
+                                    <span className="block font-semibold uppercase tracking-wider text-primary text-[11px]">
+                                      Differentials
+                                    </span>
+                                    <ul className="mt-2 list-disc ps-4 space-y-1 text-on-surface-variant">
+                                      {msg.structuredSummary.differentials.map((d) => (
+                                        <li key={d}>{d}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                              {msg.structuredSummary.recommendedNextSteps &&
+                                msg.structuredSummary.recommendedNextSteps.length > 0 && (
+                                  <div className="medi-summary-card rounded-xl p-3.5">
+                                    <span className="block font-semibold uppercase tracking-wider text-secondary text-[11px]">
+                                      Next Steps
+                                    </span>
+                                    <ul className="mt-2 list-disc ps-4 space-y-1 text-on-surface-variant">
+                                      {msg.structuredSummary.recommendedNextSteps.map((s) => (
+                                        <li key={s}>{s}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                             </div>
                           )}
-                        </div>
-                      )}
 
-                      <div className="mt-2 flex items-center justify-between gap-4 text-[10px] opacity-70">
-                        <span>{msg.timestamp}</span>
-                        {msg.mode && <span>{msg.mode === 'live' ? 'Live AI' : 'Demo Clinical AI'}</span>}
+                        <div className="no-print flex items-center gap-3 text-[11px] text-outline">
+                          <span>{msg.timestamp}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(msg.id, msg.content)}
+                            aria-label="Copy response"
+                            className="inline-flex items-center gap-1 transition-colors hover:text-on-surface cursor-pointer"
+                          >
+                            {copiedId === msg.id ? (
+                              <>
+                                <Check className="h-3 w-3 text-success" />
+                                <span className="text-success">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </article>
+                  );
+                })}
+
                 {sending && (
-                  <div className="flex justify-start">
-                    <div className="inline-flex items-center rounded-2xl rounded-tl-sm border border-outline-variant/40 bg-surface-container/90 px-4 py-2.5">
-                      <TechCareLoader variant="pulse" size="sm" />
+                  <div className="flex items-center gap-3 sm:gap-3.5">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25">
+                      <Stethoscope className="h-3.5 w-3.5" />
                     </div>
+                    <TechCareLoader variant="pulse" size="sm" />
                   </div>
                 )}
+
+                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
 
-          {/* Composer */}
-          <div className="no-print border-t border-outline-variant/25 p-4 sm:p-5">
-            {error && (
-              <div className="mb-3 flex items-center gap-2 rounded-xl border border-error/40 bg-error/10 px-3 py-2 text-xs text-error">
-                <ShieldAlert className="h-4 w-4" />
-                <span>{error}</span>
-              </div>
-            )}
+          {/* Floating Command Composer */}
+          <div className="no-print shrink-0 px-4 sm:px-8 pb-4 sm:pb-5 pt-2">
+            <div className="mx-auto max-w-3xl">
+              {error && (
+                <div
+                  role="alert"
+                  className="mb-2.5 flex items-center gap-2 rounded-xl border border-error/35 bg-error-container/25 px-3 py-2 text-xs text-error"
+                >
+                  <ShieldAlert className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
-            <form onSubmit={(e) => handleSend(e)} className="flex items-end gap-3">
-              <textarea
-                id="medi-case-input"
-                name="clinicalCaseInput"
-                aria-label="Clinical case input"
-                rows={2}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                placeholder="Enter symptoms, vitals, labs, imaging notes, or ask in English or Arabic..."
-                className="flex-1 resize-none rounded-2xl border border-outline-variant/60 bg-surface-container-lowest/90 px-4 py-3 text-sm text-on-surface placeholder:text-outline focus:border-primary focus:outline-none"
-              />
-              <button
-                type="submit"
-                disabled={sending || !input.trim()}
-                aria-label="Send clinical case"
-                className="btn-primary-glow inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-on-primary hover:bg-primary-fixed disabled:opacity-50 cursor-pointer"
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </form>
+              <form onSubmit={(e) => handleSend(e)} className="medi-composer flex items-end gap-2 p-2.5 pl-4">
+                <textarea
+                  id="medi-case-input"
+                  name="clinicalCaseInput"
+                  aria-label="Clinical case input"
+                  rows={1}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Enter symptoms, vitals, or labs..."
+                  className="max-h-36 min-h-[38px] flex-1 resize-none bg-transparent py-2 text-sm text-on-surface placeholder:text-outline focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={sending || !input.trim()}
+                  aria-label="Send clinical case"
+                  className="auth-modern-cta inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl disabled:opacity-40 cursor-pointer"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
           </div>
         </section>
       </div>
