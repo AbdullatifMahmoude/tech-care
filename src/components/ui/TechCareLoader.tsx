@@ -6,6 +6,7 @@ import { useId } from 'react';
 
 export interface TechCareLoaderProps {
   size?: 'sm' | 'md' | 'lg';
+  variant?: 'wordmark' | 'pulse';
   label?: string;
   className?: string;
 }
@@ -29,23 +30,31 @@ interface LetterSpec {
   letter: string;
   d: string;
   gradient: 'b' | 'c' | 'd';
+  delayMs: number;
 }
 
 const TECH_LETTERS: LetterSpec[] = [
-  { letter: 'T', d: 'M 10 10 H 54 H 32 V 54', gradient: 'b' },
-  { letter: 'E', d: 'M 50 10 H 14 V 32 H 44 H 14 V 54 H 50', gradient: 'd' },
-  { letter: 'C', d: 'M 49.5 16.4 A 22 22 0 1 0 49.5 47.6', gradient: 'c' },
-  { letter: 'H', d: 'M 14 10 V 54 V 32 H 50 V 10 V 54', gradient: 'b' },
+  { letter: 'T', d: 'M 10 10 H 54 H 32 V 54', gradient: 'b', delayMs: 0 },
+  { letter: 'E', d: 'M 50 10 H 14 V 32 H 44 H 14 V 54 H 50', gradient: 'd', delayMs: 65 },
+  { letter: 'C', d: 'M 49.5 16.4 A 22 22 0 1 0 49.5 47.6', gradient: 'c', delayMs: 130 },
+  { letter: 'H', d: 'M 14 10 V 54 V 32 H 50 V 10 V 54', gradient: 'b', delayMs: 195 },
 ];
 
 const CARE_LETTERS: LetterSpec[] = [
-  { letter: 'C', d: 'M 49.5 16.4 A 22 22 0 1 0 49.5 47.6', gradient: 'c' },
-  { letter: 'A', d: 'M 12 54 L 32 10 L 52 54 L 44 36 H 20', gradient: 'd' },
-  { letter: 'R', d: 'M 14 54 V 10 H 36 A 12 12 0 0 1 36 34 H 14 H 34 L 50 54', gradient: 'b' },
-  { letter: 'E', d: 'M 50 10 H 14 V 32 H 44 H 14 V 54 H 50', gradient: 'd' },
+  { letter: 'C', d: 'M 49.5 16.4 A 22 22 0 1 0 49.5 47.6', gradient: 'c', delayMs: 325 },
+  { letter: 'A', d: 'M 12 54 L 32 10 L 52 54 L 44 36 H 20', gradient: 'd', delayMs: 390 },
+  { letter: 'R', d: 'M 14 54 V 10 H 36 A 12 12 0 0 1 36 34 H 14 H 34 L 50 54', gradient: 'b', delayMs: 455 },
+  { letter: 'E', d: 'M 50 10 H 14 V 32 H 44 H 14 V 54 H 50', gradient: 'd', delayMs: 520 },
 ];
 
-export function TechCareLoader({ size = 'md', label, className = '' }: TechCareLoaderProps) {
+const PULSE_DELAYS_MS = [0, 140, 280, 420];
+
+export function TechCareLoader({
+  size = 'md',
+  variant = 'wordmark',
+  label,
+  className = '',
+}: TechCareLoaderProps) {
   const rawId = useId();
   const safeId = rawId.replace(/:/g, '_');
   const gradIds = {
@@ -54,6 +63,30 @@ export function TechCareLoader({ size = 'md', label, className = '' }: TechCareL
     d: `${safeId}-d`,
   };
   const sizing = SIZE_CLASSES[size];
+
+  if (variant === 'pulse') {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label={label ?? 'Medi is thinking'}
+        className={`inline-flex items-center justify-center ${className}`.trim()}
+      >
+        <div className="tc-pulse-loader" aria-hidden="true">
+          {PULSE_DELAYS_MS.map((delayMs) => (
+            <span
+              key={delayMs}
+              className="tc-pulse-bar"
+              style={{ animationDelay: `${delayMs}ms` }}
+            />
+          ))}
+        </div>
+        {label && (
+          <span className="ms-2.5 text-xs font-medium text-on-surface-variant">{label}</span>
+        )}
+      </div>
+    );
+  }
 
   const renderWord = (letters: LetterSpec[], wordPrefix: string) =>
     letters.map((item, idx) => (
@@ -70,10 +103,11 @@ export function TechCareLoader({ size = 'md', label, className = '' }: TechCareL
         <path
           strokeLinejoin="round"
           strokeLinecap="round"
-          strokeWidth={8}
+          strokeWidth={5}
           stroke={`url(#${gradIds[item.gradient]})`}
           d={item.d}
           className="tc-uiverse-loader-dash"
+          style={{ animationDelay: `${item.delayMs}ms` }}
           data-letter={item.letter}
           pathLength={360}
         />
@@ -129,10 +163,11 @@ export function TechCareLoader({ size = 'md', label, className = '' }: TechCareL
           <path
             strokeLinejoin="round"
             strokeLinecap="round"
-            strokeWidth={10}
+            strokeWidth={6}
             stroke={`url(#${gradIds.c})`}
             d="M 32 32 m 0 -27 a 27 27 0 1 1 0 54 a 27 27 0 1 1 0 -54"
             className="tc-uiverse-loader-spin"
+            style={{ animationDelay: '260ms' }}
             pathLength={360}
           />
         </svg>

@@ -141,7 +141,7 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     });
   });
 
-  it('Navbar has minimal links, toggles Dark/Light theme, and opens DemoRequestModal', () => {
+  it('Navbar has minimal links, toggles Dark/Light theme, and submits executive DemoRequestModal', async () => {
     renderWithRouter(
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -158,8 +158,26 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Request Demo' })[0]);
-    expect(screen.getByText('Request a Clinical Demo')).toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText('Close demo request modal'));
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('data-lenis-prevent');
+    const scrollContainer = dialog.querySelector('.overflow-y-auto');
+    expect(scrollContainer).toHaveAttribute('data-lenis-prevent');
+    expect(scrollContainer).toHaveClass('overscroll-contain');
+    expect(within(dialog).getByText('Request a Clinical Demo')).toBeInTheDocument();
+
+    fireEvent.change(within(dialog).getByLabelText(/Full Name/i), { target: { value: 'Dr. Omar Nabil' } });
+    fireEvent.change(within(dialog).getByLabelText(/Work Email/i), { target: { value: 'omar@clinic.eg' } });
+    fireEvent.change(within(dialog).getByLabelText(/Clinic \/ Institution/i), { target: { value: 'Nile Care Clinic' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Hospital IT / Operations' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Medi AI' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm Briefing Request' }));
+
+    await waitFor(() => {
+      expect(within(dialog).getByText('Demo Request Scheduled')).toBeInTheDocument();
+      expect(within(dialog).getByText(/Ref: TC-/i)).toBeInTheDocument();
+    });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
     expect(screen.queryByText('Request a Clinical Demo')).not.toBeInTheDocument();
   });
 
@@ -220,17 +238,25 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(screen.getByText('Salma Mansour')).toBeInTheDocument();
   });
 
-  it('TechCareLoader renders animated TECH CARE letter paths and separator spin ring without caption by default', () => {
-    const { container } = render(<TechCareLoader size="md" />);
+  it('TechCareLoader renders refined wordmark and compact pulse variant without captions', () => {
+    const { container, rerender } = render(<TechCareLoader size="md" />);
 
     const status = screen.getByRole('status');
     expect(status).toHaveAttribute('aria-label', 'Loading Tech Care');
     expect(status.textContent).toBe('');
 
-    const letterNodes = Array.from(container.querySelectorAll('[data-letter]')).map((el) =>
-      el.getAttribute('data-letter'),
-    );
-    expect(letterNodes).toEqual(['T', 'E', 'C', 'H', 'C', 'A', 'R', 'E']);
+    const letterPaths = Array.from(container.querySelectorAll('[data-letter]'));
+    expect(letterPaths.map((el) => el.getAttribute('data-letter'))).toEqual([
+      'T',
+      'E',
+      'C',
+      'H',
+      'C',
+      'A',
+      'R',
+      'E',
+    ]);
+    expect(letterPaths.every((el) => el.getAttribute('stroke-width') === '5')).toBe(true);
     expect(container.querySelectorAll('.tc-uiverse-loader-dash')).toHaveLength(8);
     expect(container.querySelectorAll('.tc-uiverse-loader-spin')).toHaveLength(1);
 
@@ -245,5 +271,12 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
       'var(--tc-loader-d-start)',
       'var(--tc-loader-d-end)',
     ]);
+
+    rerender(<TechCareLoader variant="pulse" size="sm" />);
+    const pulseStatus = screen.getByRole('status');
+    expect(pulseStatus).toHaveAttribute('aria-label', 'Medi is thinking');
+    expect(pulseStatus.textContent).toBe('');
+    expect(container.querySelectorAll('.tc-pulse-loader')).toHaveLength(1);
+    expect(container.querySelectorAll('.tc-pulse-bar')).toHaveLength(4);
   });
 });

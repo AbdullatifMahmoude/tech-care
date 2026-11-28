@@ -380,6 +380,40 @@ html[data-theme="light"] .auth-modern-field:focus-within {
   color: var(--color-outline);
 }
 
+.auth-modern-textarea {
+  width: 100%;
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--color-on-surface);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  outline: none;
+  resize: none;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.auth-modern-textarea::placeholder {
+  color: var(--color-outline);
+}
+
+.auth-modern-textarea:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(71, 241, 228, 0.13);
+}
+
+html[data-theme="light"] .auth-modern-textarea {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+html[data-theme="light"] .auth-modern-textarea:focus {
+  background: #ffffff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 125, 117, 0.12);
+}
+
 .auth-modern-role-card {
   display: flex;
   align-items: center;
@@ -742,6 +776,7 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   display: inline-flex;
   align-items: center;
   margin: 0.25em 0;
+  filter: drop-shadow(0 0 10px rgba(71, 241, 228, 0.22));
 }
 
 html[data-theme="light"] .tc-uiverse-loader {
@@ -751,6 +786,43 @@ html[data-theme="light"] .tc-uiverse-loader {
   --tc-loader-c-end: #0284c7;
   --tc-loader-d-start: #007d75;
   --tc-loader-d-end: #047857;
+  filter: drop-shadow(0 2px 6px rgba(0, 125, 117, 0.14));
+}
+
+.tc-pulse-loader {
+  --tc-loader-b-start: #47f1e4;
+  --tc-loader-b-end: #0566d9;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 1.125rem;
+}
+
+html[data-theme="light"] .tc-pulse-loader {
+  --tc-loader-b-start: #007d75;
+  --tc-loader-b-end: #1d4ed8;
+}
+
+.tc-pulse-bar {
+  width: 3px;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--tc-loader-b-start), var(--tc-loader-b-end));
+  animation: tcClinicalPulse 1.05s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes tcClinicalPulse {
+  0%,
+  100% {
+    transform: scaleY(0.38);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }
 
 .tc-uiverse-loader-defs {
@@ -848,7 +920,8 @@ html[data-theme="light"] .tc-uiverse-loader {
   .animate-3d-card-swap,
   .auth-modern-card,
   .tc-uiverse-loader-dash,
-  .tc-uiverse-loader-spin {
+  .tc-uiverse-loader-spin,
+  .tc-pulse-bar {
     animation: none;
   }
   .auth-modern-tab-indicator {
