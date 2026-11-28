@@ -13,6 +13,7 @@ import { useScene } from '../context/SceneContext';
 import { isLiveAiConfigured, sendClinicalQuery } from '../services/aiClient';
 import { clearSavedCases, getSavedCases, saveCases } from '../services/authService';
 import type { ChatMessage, ClinicalCase } from '../types/techcare';
+import { TechCareLoader } from '../components/ui/TechCareLoader';
 
 const STARTER_PROMPTS = [
   {
@@ -346,8 +347,13 @@ export default function MediWorkspacePage() {
                   </div>
                 ))}
                 {sending && (
-                  <div className="text-xs font-semibold text-primary animate-pulse">
-                    Medi is reviewing clinical context...
+                  <div className="flex justify-start">
+                    <div className="inline-flex flex-col items-start gap-2 rounded-2xl rounded-tl-sm border border-outline-variant/40 bg-surface-container/90 px-4 py-3">
+                      <TechCareLoader size="sm" />
+                      <span className="text-xs font-semibold text-primary">
+                        Medi is reviewing clinical context...
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>

@@ -11,6 +11,7 @@ import { ContactSection } from '../components/contact/ContactSection';
 import { Navbar } from '../components/layout/Navbar';
 import { DemoRequestModal } from '../components/modals/DemoRequestModal';
 import { AuthModal } from '../components/modals/AuthModal';
+import { TechCareLoader } from '../components/ui/TechCareLoader';
 
 function renderWithRouter(ui: React.ReactElement, initialRoute = '/') {
   return render(
@@ -162,20 +163,19 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(screen.queryByText('Request a Clinical Demo')).not.toBeInTheDocument();
   });
 
-  it('AuthModal supports Tech Care Sign In and Create Account flows with password confirmation', () => {
+  it('AuthModal supports modern Sign in and Create account flows with password confirmation', () => {
     renderWithRouter(<LandingPage />, '/');
 
-    // Open Sign In modal from Navbar
+    // Open Sign in modal from Navbar
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign in' })[0]);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('Welcome back')).toBeInTheDocument();
-    expect(within(dialog).getByText('TechCare Bot')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Email')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Password')).toBeInTheDocument();
 
-    // Switch to Create Account view
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Create account' }));
-    expect(within(dialog).getByText('Join Tech Care')).toBeInTheDocument();
+    // Switch to Create account tab
+    fireEvent.click(within(dialog).getByRole('tab', { name: 'Create account' }));
+    expect(within(dialog).getByText('Create your account')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('First Name')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Last Name')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Confirm Password')).toBeInTheDocument();
@@ -190,7 +190,7 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     fireEvent.change(within(dialog).getByLabelText('Email'), { target: { value: 'salma@tech-care.tech' } });
     fireEvent.change(within(dialog).getByLabelText('Password'), { target: { value: 'secret123' } });
     fireEvent.change(within(dialog).getByLabelText('Confirm Password'), { target: { value: 'different123' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Create Account' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create account' }));
 
     expect(within(dialog).getByRole('alert')).toHaveTextContent('Passwords do not match.');
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -199,20 +199,35 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     fireEvent.change(within(dialog).getByLabelText('Confirm Password'), { target: { value: 'secret123' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Female' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Medical Student' }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Create Account' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create account' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText('Salma Mansour')).toBeInTheDocument();
 
-    // Sign out and verify Sign In flow works with Email + Password
+    // Sign out and verify Sign in flow works with Email + Password
     fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign in' })[0]);
     const signInDialog = screen.getByRole('dialog');
     fireEvent.change(within(signInDialog).getByLabelText('Email'), { target: { value: 'salma@tech-care.tech' } });
     fireEvent.change(within(signInDialog).getByLabelText('Password'), { target: { value: 'secret123' } });
-    fireEvent.click(within(signInDialog).getByRole('button', { name: 'Sign In' }));
+    fireEvent.click(within(signInDialog).getByRole('button', { name: 'Sign in' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText('Salma Mansour')).toBeInTheDocument();
+  });
+
+  it('TechCareLoader renders animated TECH CARE letter paths and separator spin ring', () => {
+    const { container } = render(<TechCareLoader size="md" label="Loading Clinical Module..." />);
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-label', 'Loading Clinical Module...');
+    expect(screen.getByText('Loading Clinical Module...')).toBeInTheDocument();
+
+    const letterNodes = Array.from(container.querySelectorAll('[data-letter]')).map((el) =>
+      el.getAttribute('data-letter'),
+    );
+    expect(letterNodes).toEqual(['T', 'E', 'C', 'H', 'C', 'A', 'R', 'E']);
+    expect(container.querySelectorAll('.tc-uiverse-loader-dash')).toHaveLength(8);
+    expect(container.querySelectorAll('.tc-uiverse-loader-spin')).toHaveLength(1);
   });
 });
