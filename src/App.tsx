@@ -8,6 +8,7 @@ import { Footer } from './components/layout/Footer';
 import { DemoRequestModal } from './components/modals/DemoRequestModal';
 import { AuthModal } from './components/modals/AuthModal';
 import { TechCareLoader } from './components/ui/TechCareLoader';
+import { CustomCursor } from './components/ui/CustomCursor';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const MediWorkspacePage = lazy(() => import('./pages/MediWorkspacePage'));
@@ -54,11 +55,20 @@ function AppShell() {
   const isMediRoute = pathname === '/medi';
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-background text-on-surface">
+    <div
+      className={`relative flex flex-col bg-background text-on-surface ${
+        isMediRoute ? 'h-screen overflow-hidden' : 'min-h-screen'
+      }`}
+    >
+      <CustomCursor />
       <ThreeBackdrop />
       <Navbar />
 
-      <main className="relative z-10 flex-1 pt-16">
+      <main
+        className={`relative z-10 flex-1 pt-16 ${
+          isMediRoute ? 'min-h-0 overflow-hidden' : ''
+        }`}
+      >
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

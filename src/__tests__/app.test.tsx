@@ -12,6 +12,7 @@ import { Navbar } from '../components/layout/Navbar';
 import { DemoRequestModal } from '../components/modals/DemoRequestModal';
 import { AuthModal } from '../components/modals/AuthModal';
 import { TechCareLoader } from '../components/ui/TechCareLoader';
+import { CustomCursor } from '../components/ui/CustomCursor';
 
 function renderWithRouter(ui: React.ReactElement, initialRoute = '/') {
   return render(
@@ -124,7 +125,7 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(studioRoot).toHaveAttribute('data-lenis-prevent');
     const scrollThread = container.querySelector('section > .overflow-y-auto');
     expect(scrollThread).toHaveAttribute('data-lenis-prevent');
-    expect(scrollThread).toHaveClass('min-h-0', 'overscroll-contain');
+    expect(scrollThread).toHaveClass('medi-scroll', 'touch-pan-y', 'min-h-0', 'overscroll-contain');
 
     const textarea = screen.getByPlaceholderText(/Enter symptoms, vitals/i);
     fireEvent.change(textarea, { target: { value: 'مريض يعاني من صداع شديد وارتفاع الضغط' } });
@@ -291,5 +292,10 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(pulseStatus.textContent).toBe('');
     expect(container.querySelectorAll('.tc-pulse-loader')).toHaveLength(1);
     expect(container.querySelectorAll('.tc-pulse-bar')).toHaveLength(4);
+  });
+
+  it('CustomCursor skips activation cleanly in jsdom without modifying documentElement', () => {
+    render(<CustomCursor />);
+    expect(document.documentElement.classList.contains('tc-custom-cursor-active')).toBe(false);
   });
 });

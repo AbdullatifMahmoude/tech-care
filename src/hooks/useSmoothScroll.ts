@@ -1,12 +1,16 @@
 import { useEffect, useRef } from 'react';
 import type Lenis from 'lenis';
 
-export function useSmoothScroll(paused = false) {
+export function useSmoothScroll(disabled = false) {
   const lenisRef = useRef<Lenis | null>(null);
-  const pausedRef = useRef(paused);
-  pausedRef.current = paused;
 
   useEffect(() => {
+    if (disabled) {
+      lenisRef.current?.destroy();
+      lenisRef.current = null;
+      return;
+    }
+
     if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
     if (/jsdom/i.test(navigator.userAgent)) return;
 
@@ -24,13 +28,11 @@ export function useSmoothScroll(paused = false) {
         duration: 1.75,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -9 * t)),
         smoothWheel: true,
+        allowNestedScroll: true,
         wheelMultiplier: 0.62,
         touchMultiplier: 0.85,
       });
       lenisRef.current = lenis;
-      if (pausedRef.current) {
-        lenis.stop();
-      }
 
       const raf = (time: number) => {
         if (cancelled) return;
@@ -48,17 +50,7 @@ export function useSmoothScroll(paused = false) {
       lenisRef.current?.destroy();
       lenisRef.current = null;
     };
-  }, []);
-
-  useEffect(() => {
-    const lenis = lenisRef.current;
-    if (!lenis) return;
-    if (paused) {
-      lenis.stop();
-    } else {
-      lenis.start();
-    }
-  }, [paused]);
+  }, [disabled]);
 
   return lenisRef;
 }

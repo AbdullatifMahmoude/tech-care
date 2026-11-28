@@ -75,7 +75,13 @@ export default function MediWorkspacePage() {
   const visibleMessages = activeCase ? activeCase.messages : draftMessages;
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    messagesEndRef.current?.scrollIntoView?.({ behavior, block: 'end' });
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    if (typeof el.scrollTo === 'function') {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    } else {
+      el.scrollTop = el.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -360,7 +366,7 @@ export default function MediWorkspacePage() {
           ) : (
             <div
               data-lenis-prevent
-              className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1"
+              className="medi-scroll min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain touch-pan-y pr-1"
             >
               {cases.map((c) => {
                 const isActive = c.id === activeCaseId;
@@ -503,7 +509,7 @@ export default function MediWorkspacePage() {
           ref={scrollContainerRef}
           onScroll={handleThreadScroll}
           data-lenis-prevent
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-8"
+          className="medi-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 sm:px-8"
         >
           {visibleMessages.length === 0 ? (
             <div className="relative mx-auto flex min-h-full w-full max-w-2xl flex-col items-center justify-center py-10 text-center">
