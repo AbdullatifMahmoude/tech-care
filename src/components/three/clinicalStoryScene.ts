@@ -560,12 +560,12 @@ export function createClinicalStoryScene(
   const disposableGeos: THREE_TYPE.BufferGeometry[] = [];
   const disposableMats: THREE_TYPE.Material[] = [];
 
-  const darkCyan = new THREE.Color(0x47f1e4);
-  const darkBlue = new THREE.Color(0x38bdf8);
-  const darkViolet = new THREE.Color(0x6366f1);
-  const lightTeal = new THREE.Color(0x008b82);
-  const lightNavy = new THREE.Color(0x0284c7);
-  const lightViolet = new THREE.Color(0x4f46e5);
+  const darkCyan = new THREE.Color(0x38b8ac);
+  const darkBlue = new THREE.Color(0x5288b8);
+  const darkViolet = new THREE.Color(0x6c74b8);
+  const lightTeal = new THREE.Color(0x147a72);
+  const lightNavy = new THREE.Color(0x2c5aa0);
+  const lightViolet = new THREE.Color(0x52589e);
 
   // =========================================================================
   // LAYER 1: Holographic Fresnel Anatomical Cortical Shell + Inner Core

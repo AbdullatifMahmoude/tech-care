@@ -11,18 +11,18 @@ export interface TechCareLoaderProps {
   className?: string;
 }
 
-const SIZE_CLASSES: Record<NonNullable<TechCareLoaderProps['size']>, { letter: string; orb: string }> = {
+const SIZE_CLASSES: Record<NonNullable<TechCareLoaderProps['size']>, { letter: string; gap: string }> = {
   sm: {
     letter: 'h-5 w-5',
-    orb: 'h-2.5 w-2.5 mx-1.5',
+    gap: 'w-3',
   },
   md: {
     letter: 'h-7 w-7 sm:h-10 sm:w-10',
-    orb: 'h-3.5 w-3.5 sm:h-5 sm:w-5 mx-1.5 sm:mx-2.5',
+    gap: 'w-4 sm:w-5',
   },
   lg: {
     letter: 'h-8 w-8 sm:h-12 sm:w-12 md:h-14 md:w-14',
-    orb: 'h-4 w-4 sm:h-6 sm:w-6 mx-2 sm:mx-3',
+    gap: 'w-4 sm:w-6 md:w-7',
   },
 };
 
@@ -41,10 +41,10 @@ const TECH_LETTERS: LetterSpec[] = [
 ];
 
 const CARE_LETTERS: LetterSpec[] = [
-  { letter: 'C', d: 'M 49.5 16.4 A 22 22 0 1 0 49.5 47.6', gradient: 'c', delayMs: 325 },
-  { letter: 'A', d: 'M 12 54 L 32 10 L 52 54 L 44 36 H 20', gradient: 'd', delayMs: 390 },
-  { letter: 'R', d: 'M 14 54 V 10 H 36 A 12 12 0 0 1 36 34 H 14 H 34 L 50 54', gradient: 'b', delayMs: 455 },
-  { letter: 'E', d: 'M 50 10 H 14 V 32 H 44 H 14 V 54 H 50', gradient: 'd', delayMs: 520 },
+  { letter: 'C', d: 'M 49.5 16.4 A 22 22 0 1 0 49.5 47.6', gradient: 'c', delayMs: 260 },
+  { letter: 'A', d: 'M 12 54 L 32 10 L 52 54 L 44 36 H 20', gradient: 'd', delayMs: 325 },
+  { letter: 'R', d: 'M 14 54 V 10 H 36 A 12 12 0 0 1 36 34 H 14 H 34 L 50 54', gradient: 'b', delayMs: 390 },
+  { letter: 'E', d: 'M 50 10 H 14 V 32 H 44 H 14 V 54 H 50', gradient: 'd', delayMs: 455 },
 ];
 
 const PULSE_DELAYS_MS = [0, 140, 280, 420];
@@ -150,28 +150,7 @@ export function TechCareLoader({
         </svg>
 
         {renderWord(TECH_LETTERS, 'tech')}
-
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 64 64"
-          height="64"
-          width="64"
-          aria-hidden="true"
-          className={`tc-uiverse-loader-glyph ${sizing.orb}`}
-        >
-          <path
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth={6}
-            stroke={`url(#${gradIds.c})`}
-            d="M 32 32 m 0 -27 a 27 27 0 1 1 0 54 a 27 27 0 1 1 0 -54"
-            className="tc-uiverse-loader-spin"
-            style={{ animationDelay: '260ms' }}
-            pathLength={360}
-          />
-        </svg>
-
+        <span className={`inline-block shrink-0 ${sizing.gap}`} aria-hidden="true" />
         {renderWord(CARE_LETTERS, 'care')}
       </div>
 

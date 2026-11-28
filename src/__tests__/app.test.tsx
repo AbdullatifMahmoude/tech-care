@@ -258,7 +258,7 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     ]);
     expect(letterPaths.every((el) => el.getAttribute('stroke-width') === '5')).toBe(true);
     expect(container.querySelectorAll('.tc-uiverse-loader-dash')).toHaveLength(8);
-    expect(container.querySelectorAll('.tc-uiverse-loader-spin')).toHaveLength(1);
+    expect(container.querySelectorAll('.tc-uiverse-loader-spin')).toHaveLength(0);
 
     const stopColors = Array.from(container.querySelectorAll('stop')).map((el) =>
       el.getAttribute('stop-color'),
