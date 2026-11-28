@@ -15,7 +15,23 @@ const MadaPage = lazy(() => import('./pages/MadaPage'));
 
 function ScrollHandler() {
   const { pathname, hash } = useLocation();
-  useSmoothScroll();
+  const { authModalOpen, demoModalOpen } = useScene();
+  const modalOpen = authModalOpen || demoModalOpen;
+
+  useSmoothScroll(modalOpen);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, [modalOpen]);
 
   useEffect(() => {
     if (hash) {
@@ -68,7 +84,7 @@ function InitialPreloader() {
         fading ? 'pointer-events-none opacity-0' : 'opacity-100'
       }`}
     >
-      <TechCareLoader size="lg" label="AI-Powered Healthcare Intelligence" />
+      <TechCareLoader size="lg" />
     </div>
   );
 }
@@ -76,7 +92,7 @@ function InitialPreloader() {
 function PageLoader() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <TechCareLoader size="md" label="Loading Clinical Module..." />
+      <TechCareLoader size="md" />
     </div>
   );
 }

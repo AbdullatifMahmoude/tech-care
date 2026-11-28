@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
 import type Lenis from 'lenis';
 
-export function useSmoothScroll() {
+export function useSmoothScroll(paused = false) {
   const lenisRef = useRef<Lenis | null>(null);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
@@ -26,6 +28,9 @@ export function useSmoothScroll() {
         touchMultiplier: 0.85,
       });
       lenisRef.current = lenis;
+      if (pausedRef.current) {
+        lenis.stop();
+      }
 
       const raf = (time: number) => {
         if (cancelled) return;
@@ -44,6 +49,16 @@ export function useSmoothScroll() {
       lenisRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const lenis = lenisRef.current;
+    if (!lenis) return;
+    if (paused) {
+      lenis.stop();
+    } else {
+      lenis.start();
+    }
+  }, [paused]);
 
   return lenisRef;
 }

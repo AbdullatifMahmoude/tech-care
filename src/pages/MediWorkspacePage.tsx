@@ -348,11 +348,8 @@ export default function MediWorkspacePage() {
                 ))}
                 {sending && (
                   <div className="flex justify-start">
-                    <div className="inline-flex flex-col items-start gap-2 rounded-2xl rounded-tl-sm border border-outline-variant/40 bg-surface-container/90 px-4 py-3">
+                    <div className="inline-flex items-center rounded-2xl rounded-tl-sm border border-outline-variant/40 bg-surface-container/90 px-4 py-2.5">
                       <TechCareLoader size="sm" />
-                      <span className="text-xs font-semibold text-primary">
-                        Medi is reviewing clinical context...
-                      </span>
                     </div>
                   </div>
                 )}

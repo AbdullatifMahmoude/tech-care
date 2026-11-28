@@ -49,9 +49,18 @@ export function DemoRequestModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="demo-modal-title"
+      data-lenis-prevent
+    >
       <div className="modal-backdrop fixed inset-0 backdrop-blur-xl" onClick={resetAndClose} />
-      <div className="modal-surface relative z-10 max-h-[90svh] w-full max-w-lg overflow-y-auto rounded-3xl p-5 sm:p-8 backdrop-blur-2xl">
+      <div
+        data-lenis-prevent
+        className="modal-surface relative z-10 max-h-[90svh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-3xl p-5 sm:p-8 backdrop-blur-2xl"
+      >
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary">

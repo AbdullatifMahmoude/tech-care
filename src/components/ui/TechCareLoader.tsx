@@ -91,12 +91,12 @@ export function TechCareLoader({ size = 'md', label, className = '' }: TechCareL
         <svg height="0" width="0" viewBox="0 0 64 64" className="tc-uiverse-loader-defs" aria-hidden="true">
           <defs xmlns="http://www.w3.org/2000/svg">
             <linearGradient gradientUnits="userSpaceOnUse" y2="2" x2="0" y1="62" x1="0" id={gradIds.b}>
-              <stop stopColor="#973BED" />
-              <stop stopColor="#007CFF" offset="1" />
+              <stop stopColor="var(--tc-loader-b-start)" />
+              <stop stopColor="var(--tc-loader-b-end)" offset="1" />
             </linearGradient>
             <linearGradient gradientUnits="userSpaceOnUse" y2="0" x2="0" y1="64" x1="0" id={gradIds.c}>
-              <stop stopColor="#FFC800" />
-              <stop stopColor="#F0F" offset="1" />
+              <stop stopColor="var(--tc-loader-c-start)" />
+              <stop stopColor="var(--tc-loader-c-end)" offset="1" />
               <animateTransform
                 repeatCount="indefinite"
                 keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1"
@@ -109,8 +109,8 @@ export function TechCareLoader({ size = 'md', label, className = '' }: TechCareL
               />
             </linearGradient>
             <linearGradient gradientUnits="userSpaceOnUse" y2="2" x2="0" y1="62" x1="0" id={gradIds.d}>
-              <stop stopColor="#00E0ED" />
-              <stop stopColor="#00DA72" offset="1" />
+              <stop stopColor="var(--tc-loader-d-start)" />
+              <stop stopColor="var(--tc-loader-d-end)" offset="1" />
             </linearGradient>
           </defs>
         </svg>

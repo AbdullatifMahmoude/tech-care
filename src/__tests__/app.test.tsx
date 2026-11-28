@@ -169,6 +169,10 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     // Open Sign in modal from Navbar
     fireEvent.click(screen.getAllByRole('button', { name: 'Sign in' })[0]);
     const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('data-lenis-prevent');
+    const scrollContainer = dialog.querySelector('.overflow-y-auto');
+    expect(scrollContainer).toHaveAttribute('data-lenis-prevent');
+    expect(scrollContainer).toHaveClass('overscroll-contain');
     expect(within(dialog).getByText('Welcome back')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Email')).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Password')).toBeInTheDocument();
@@ -216,12 +220,12 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(screen.getByText('Salma Mansour')).toBeInTheDocument();
   });
 
-  it('TechCareLoader renders animated TECH CARE letter paths and separator spin ring', () => {
-    const { container } = render(<TechCareLoader size="md" label="Loading Clinical Module..." />);
+  it('TechCareLoader renders animated TECH CARE letter paths and separator spin ring without caption by default', () => {
+    const { container } = render(<TechCareLoader size="md" />);
 
     const status = screen.getByRole('status');
-    expect(status).toHaveAttribute('aria-label', 'Loading Clinical Module...');
-    expect(screen.getByText('Loading Clinical Module...')).toBeInTheDocument();
+    expect(status).toHaveAttribute('aria-label', 'Loading Tech Care');
+    expect(status.textContent).toBe('');
 
     const letterNodes = Array.from(container.querySelectorAll('[data-letter]')).map((el) =>
       el.getAttribute('data-letter'),
@@ -229,5 +233,17 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(letterNodes).toEqual(['T', 'E', 'C', 'H', 'C', 'A', 'R', 'E']);
     expect(container.querySelectorAll('.tc-uiverse-loader-dash')).toHaveLength(8);
     expect(container.querySelectorAll('.tc-uiverse-loader-spin')).toHaveLength(1);
+
+    const stopColors = Array.from(container.querySelectorAll('stop')).map((el) =>
+      el.getAttribute('stop-color'),
+    );
+    expect(stopColors).toEqual([
+      'var(--tc-loader-b-start)',
+      'var(--tc-loader-b-end)',
+      'var(--tc-loader-c-start)',
+      'var(--tc-loader-c-end)',
+      'var(--tc-loader-d-start)',
+      'var(--tc-loader-d-end)',
+    ]);
   });
 });
