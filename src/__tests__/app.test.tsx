@@ -141,7 +141,7 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     });
   });
 
-  it('Navbar has minimal links, toggles Dark/Light theme, and submits executive DemoRequestModal', async () => {
+  it('Navbar has minimal links, toggles Dark/Light theme, and submits calm captionless DemoRequestModal', async () => {
     renderWithRouter(
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -164,13 +164,13 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(scrollContainer).toHaveAttribute('data-lenis-prevent');
     expect(scrollContainer).toHaveClass('overscroll-contain');
     expect(within(dialog).getByText('Request a Clinical Demo')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Clinical Briefing')).not.toBeInTheDocument();
 
-    fireEvent.change(within(dialog).getByLabelText(/Full Name/i), { target: { value: 'Dr. Omar Nabil' } });
-    fireEvent.change(within(dialog).getByLabelText(/Work Email/i), { target: { value: 'omar@clinic.eg' } });
-    fireEvent.change(within(dialog).getByLabelText(/Clinic \/ Institution/i), { target: { value: 'Nile Care Clinic' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Hospital IT / Operations' }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Medi AI' }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm Briefing Request' }));
+    fireEvent.change(within(dialog).getByLabelText('Full Name'), { target: { value: 'Dr. Omar Nabil' } });
+    fireEvent.change(within(dialog).getByLabelText('Work Email'), { target: { value: 'omar@clinic.eg' } });
+    fireEvent.change(within(dialog).getByLabelText('Clinic / Institution'), { target: { value: 'Nile Care Clinic' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Hospital IT' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Request Demo' }));
 
     await waitFor(() => {
       expect(within(dialog).getByText('Demo Request Scheduled')).toBeInTheDocument();
