@@ -1078,6 +1078,110 @@ html[data-theme="light"] .medi-summary-card {
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
+.medi-canvas-grid {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, #000000 25%, transparent 80%);
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, #000000 25%, transparent 80%);
+}
+
+html[data-theme="light"] .medi-canvas-grid {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.11) 1px, transparent 1px);
+}
+
+.medi-ai-card {
+  background: rgba(12, 19, 32, 0.64);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 20px 44px -22px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="light"] .medi-ai-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 14px 36px -20px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.medi-starter-tile {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(13, 21, 35, 0.56);
+  transition: transform 170ms ease, border-color 170ms ease, background-color 170ms ease, box-shadow 170ms ease;
+}
+
+.medi-starter-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(56, 184, 172, 0.45);
+  background: rgba(18, 29, 48, 0.78);
+  box-shadow: 0 14px 30px -16px rgba(56, 184, 172, 0.2);
+}
+
+html[data-theme="light"] .medi-starter-tile {
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: #ffffff;
+  box-shadow: 0 4px 14px -8px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="light"] .medi-starter-tile:hover {
+  border-color: rgba(20, 122, 114, 0.42);
+  background: #f8fbfc;
+  box-shadow: 0 12px 26px -14px rgba(20, 122, 114, 0.16);
+}
+
+.medi-lens-pill {
+  border: 1px solid transparent;
+  color: var(--color-on-surface-variant);
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  cursor: pointer;
+}
+
+.medi-lens-pill:hover {
+  color: var(--color-on-surface);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.medi-lens-pill[data-active="true"] {
+  border-color: rgba(56, 184, 172, 0.35);
+  background: rgba(56, 184, 172, 0.14);
+  color: var(--color-primary);
+}
+
+html[data-theme="light"] .medi-lens-pill:hover {
+  background: rgba(15, 23, 42, 0.045);
+}
+
+html[data-theme="light"] .medi-lens-pill[data-active="true"] {
+  border-color: rgba(20, 122, 114, 0.32);
+  background: rgba(20, 122, 114, 0.1);
+}
+
+.medi-followup-pill {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--color-on-surface-variant);
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+  cursor: pointer;
+}
+
+.medi-followup-pill:hover {
+  border-color: rgba(56, 184, 172, 0.45);
+  background: rgba(56, 184, 172, 0.08);
+  color: var(--color-on-surface);
+}
+
+html[data-theme="light"] .medi-followup-pill {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+}
+
+html[data-theme="light"] .medi-followup-pill:hover {
+  border-color: rgba(20, 122, 114, 0.42);
+  background: #f4f7fb;
+}
+
 .medi-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(56, 184, 172, 0.25) transparent;

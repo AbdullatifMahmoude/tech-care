@@ -128,6 +128,8 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(scrollThread).toHaveClass('medi-scroll', 'touch-pan-y', 'min-h-0', 'overscroll-contain');
 
     const textarea = screen.getByPlaceholderText(/Enter symptoms, vitals/i);
+    fireEvent.click(screen.getByRole('button', { name: /Vitals/i }));
+    expect((textarea as HTMLTextAreaElement).value).toContain('BP:');
     fireEvent.change(textarea, { target: { value: 'مريض يعاني من صداع شديد وارتفاع الضغط' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send clinical case' }));
 
