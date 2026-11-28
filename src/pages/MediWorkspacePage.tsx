@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
+  ArrowDown,
   ArrowUp,
   Check,
   Copy,
@@ -8,6 +9,7 @@ import {
   HeartPulse,
   MessageSquarePlus,
   PanelLeft,
+  RotateCcw,
   ShieldAlert,
   Stethoscope,
   Trash2,
@@ -59,8 +61,11 @@ export default function MediWorkspacePage() {
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showScrollDown, setShowScrollDown] = useState(false);
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     setRouteScene('ambient-2d');
@@ -69,15 +74,45 @@ export default function MediWorkspacePage() {
   const activeCase = cases.find((c) => c.id === activeCaseId) ?? null;
   const visibleMessages = activeCase ? activeCase.messages : draftMessages;
 
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView?.({ behavior, block: 'end' });
+  };
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
+    if (visibleMessages.length > 0 || sending) {
+      scrollToBottom('smooth');
+    }
   }, [visibleMessages.length, sending]);
+
+  const handleThreadScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollDown(distanceFromBottom > 140);
+  };
+
+  const adjustTextareaHeight = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  };
 
   const startNewCase = () => {
     setActiveCaseId(null);
     setDraftMessages([]);
     setError('');
+    setShowScrollDown(false);
     setMobileSidebarOpen(false);
+  };
+
+  const handleDeleteCase = (caseId: string) => {
+    const nextCases = cases.filter((c) => c.id !== caseId);
+    setCases(nextCases);
+    if (session) saveCases(nextCases);
+    if (activeCaseId === caseId) {
+      setActiveCaseId(null);
+      setDraftMessages([]);
+    }
   };
 
   const handleCopy = async (id: string, content: string) => {
@@ -98,6 +133,31 @@ export default function MediWorkspacePage() {
     } else {
       setDesktopSidebarOpen((v) => !v);
     }
+  };
+
+  const persistMessages = (nextMessages: ChatMessage[], titleHint: string) => {
+    if (activeCase) {
+      const updated = cases.map((c) =>
+        c.id === activeCase.id ? { ...c, messages: nextMessages, updatedAt: new Date().toISOString() } : c,
+      );
+      setCases(updated);
+      if (session) saveCases(updated);
+      return updated;
+    }
+
+    const newCase: ClinicalCase = {
+      id: `case-${Date.now().toString(36)}`,
+      title: titleHint.slice(0, 44) + (titleHint.length > 44 ? '...' : ''),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: nextMessages,
+    };
+    const nextCases = [newCase, ...cases];
+    setCases(nextCases);
+    setActiveCaseId(newCase.id);
+    setDraftMessages([]);
+    if (session) saveCases(nextCases);
+    return nextCases;
   };
 
   const handleSend = async (e?: FormEvent, overrideText?: string) => {
@@ -127,6 +187,9 @@ export default function MediWorkspacePage() {
     }
 
     setInput('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
     setSending(true);
 
     try {
@@ -147,27 +210,7 @@ export default function MediWorkspacePage() {
       };
 
       const finalMessages = [...nextHistory, assistantMsg];
-
-      if (activeCase) {
-        const updated = cases.map((c) =>
-          c.id === activeCase.id ? { ...c, messages: finalMessages, updatedAt: new Date().toISOString() } : c,
-        );
-        setCases(updated);
-        if (session) saveCases(updated);
-      } else {
-        const newCase: ClinicalCase = {
-          id: `case-${Date.now().toString(36)}`,
-          title: text.slice(0, 44) + (text.length > 44 ? '...' : ''),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          messages: finalMessages,
-        };
-        const nextCases = [newCase, ...cases];
-        setCases(nextCases);
-        setActiveCaseId(newCase.id);
-        setDraftMessages([]);
-        if (session) saveCases(nextCases);
-      }
+      persistMessages(finalMessages, text);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to reach Medi AI service.');
     } finally {
@@ -175,40 +218,124 @@ export default function MediWorkspacePage() {
     }
   };
 
+  const handleRegenerate = async (assistantIndex: number) => {
+    if (sending) return;
+    let promptMsg: ChatMessage | undefined;
+    for (let i = assistantIndex - 1; i >= 0; i -= 1) {
+      if (visibleMessages[i].role === 'user') {
+        promptMsg = visibleMessages[i];
+        break;
+      }
+    }
+    if (!promptMsg) return;
+
+    setError('');
+    const baseHistory = visibleMessages.slice(0, assistantIndex);
+    if (activeCase) {
+      const updated = cases.map((c) =>
+        c.id === activeCase.id ? { ...c, messages: baseHistory, updatedAt: new Date().toISOString() } : c,
+      );
+      setCases(updated);
+      if (session) saveCases(updated);
+    } else {
+      setDraftMessages(baseHistory);
+    }
+
+    setSending(true);
+    try {
+      const res = await sendClinicalQuery({
+        query: promptMsg.content,
+        history: baseHistory,
+        context: 'medi-workspace',
+      });
+
+      const regenerated: ChatMessage = {
+        id: `m-a-${Date.now()}`,
+        role: 'assistant',
+        content: res.reply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        language: res.language,
+        mode: res.mode,
+        structuredSummary: res.structuredSummary,
+      };
+
+      const finalMessages = [...baseHistory, regenerated];
+      persistMessages(finalMessages, promptMsg.content);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to reach Medi AI service.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const renderComposer = (centered = false) => (
+    <form
+      onSubmit={(e) => handleSend(e)}
+      className={`medi-composer flex items-end gap-2 ${centered ? 'p-3 pl-4' : 'p-2.5 pl-4'}`}
+    >
+      <textarea
+        ref={textareaRef}
+        id="medi-case-input"
+        name="clinicalCaseInput"
+        aria-label="Clinical case input"
+        rows={centered ? 2 : 1}
+        value={input}
+        onChange={(e) => {
+          setInput(e.target.value);
+          adjustTextareaHeight(e.target);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
+        placeholder="Enter symptoms, vitals, or labs..."
+        className="max-h-40 min-h-[38px] flex-1 resize-none bg-transparent py-2 text-sm text-on-surface placeholder:text-outline focus:outline-none"
+      />
+      <button
+        type="submit"
+        disabled={sending || !input.trim()}
+        aria-label="Send clinical case"
+        className="auth-modern-cta inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl disabled:opacity-35 cursor-pointer"
+      >
+        <ArrowUp className="h-4 w-4" />
+      </button>
+    </form>
+  );
+
   const renderSidebarBody = () => (
-    <div className="flex h-full flex-col justify-between p-4">
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15 text-primary">
+    <div className="flex h-full min-h-0 flex-col justify-between p-3.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
               <Stethoscope className="h-4 w-4" />
             </div>
             <span className="font-headline-sm text-sm font-bold tracking-tight text-on-surface">Medi</span>
           </div>
 
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={startNewCase}
-              aria-label="New case"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-on-primary cursor-pointer"
-            >
-              <MessageSquarePlus className="h-3.5 w-3.5" />
-              <span>New</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileSidebarOpen(false)}
-              aria-label="Close case history"
-              className="rounded-lg p-1.5 text-on-surface-variant hover:text-on-surface lg:hidden cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-label="Close case history"
+            className="rounded-lg p-1.5 text-on-surface-variant hover:text-on-surface lg:hidden cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="mb-2 flex items-center justify-between px-1">
+        <button
+          type="button"
+          onClick={startNewCase}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/40 bg-surface-container/55 py-2 text-xs font-semibold text-on-surface transition-colors hover:border-primary/50 hover:bg-primary/10 cursor-pointer"
+        >
+          <MessageSquarePlus className="h-3.5 w-3.5 text-primary" />
+          <span>New case</span>
+        </button>
+
+        <div className="flex min-h-0 flex-1 flex-col pt-1">
+          <div className="mb-1.5 flex items-center justify-between px-1.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-outline">Cases</span>
             {cases.length > 0 && (
               <button
@@ -229,27 +356,42 @@ export default function MediWorkspacePage() {
           </div>
 
           {cases.length === 0 ? (
-            <p className="px-1 py-2 text-xs text-outline">No cases yet</p>
+            <p className="px-1.5 py-2 text-xs text-outline">No cases yet</p>
           ) : (
-            <div className="flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1">
+            <div
+              data-lenis-prevent
+              className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1"
+            >
               {cases.map((c) => {
                 const isActive = c.id === activeCaseId;
                 return (
-                  <button
+                  <div
                     key={c.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveCaseId(c.id);
-                      setMobileSidebarOpen(false);
-                    }}
-                    className={`w-full rounded-xl px-3 py-2.5 text-left text-xs transition-colors cursor-pointer ${
+                    className={`group flex items-center gap-1 rounded-xl px-2.5 py-2 text-xs transition-colors ${
                       isActive
                         ? 'bg-primary/14 font-semibold text-on-surface ring-1 ring-primary/35'
                         : 'text-on-surface-variant hover:bg-surface-container/60 hover:text-on-surface'
                     }`}
                   >
-                    <span className="block truncate">{c.title}</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveCaseId(c.id);
+                        setMobileSidebarOpen(false);
+                      }}
+                      className="min-w-0 flex-1 truncate text-left cursor-pointer"
+                    >
+                      {c.title}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCase(c.id)}
+                      aria-label={`Delete ${c.title}`}
+                      className="rounded-md p-1 text-outline opacity-0 transition-opacity hover:text-error group-hover:opacity-100 focus:opacity-100 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -258,7 +400,7 @@ export default function MediWorkspacePage() {
       </div>
 
       {/* Compact Session Footer */}
-      <div className="mt-4 border-t border-outline-variant/25 pt-3">
+      <div className="mt-3 shrink-0 border-t border-outline-variant/25 pt-3">
         {session ? (
           <div className="flex items-center justify-between gap-2 px-1">
             <div className="flex min-w-0 items-center gap-2">
@@ -286,219 +428,267 @@ export default function MediWorkspacePage() {
   );
 
   return (
-    <div className="relative z-10 mx-auto flex h-[calc(100svh-4.5rem)] w-full max-w-[1520px] flex-col px-3 sm:px-6 md:px-margin-desktop py-3 sm:py-5 text-on-surface">
-      <div className="medi-shell relative flex min-h-0 flex-1 overflow-hidden rounded-[24px]">
-        {/* Desktop Collapsible Sidebar */}
-        <aside
-          className={`no-print hidden lg:flex shrink-0 flex-col border-r transition-[width,opacity] duration-200 ${
-            desktopSidebarOpen ? 'medi-sidebar w-72 opacity-100' : 'w-0 overflow-hidden border-r-0 opacity-0'
-          }`}
-        >
-          {renderSidebarBody()}
-        </aside>
+    <div
+      data-lenis-prevent
+      className="medi-studio relative z-10 flex h-[calc(100svh-4rem)] w-full overflow-hidden text-on-surface"
+    >
+      {/* Desktop Collapsible Sidebar */}
+      <aside
+        className={`no-print hidden lg:flex min-h-0 shrink-0 flex-col border-r transition-[width,opacity] duration-200 ${
+          desktopSidebarOpen ? 'medi-sidebar w-[268px] opacity-100' : 'w-0 overflow-hidden border-r-0 opacity-0'
+        }`}
+      >
+        {renderSidebarBody()}
+      </aside>
 
-        {/* Mobile Drawer Overlay */}
-        {mobileSidebarOpen && (
-          <div className="no-print fixed inset-0 z-50 flex lg:hidden">
-            <div
-              className="fixed inset-0 bg-background/70 backdrop-blur-sm"
-              onClick={() => setMobileSidebarOpen(false)}
-            />
-            <aside className="medi-sidebar relative z-10 h-full w-72 border-r shadow-2xl">
-              {renderSidebarBody()}
-            </aside>
+      {/* Mobile Drawer Overlay */}
+      {mobileSidebarOpen && (
+        <div className="no-print fixed inset-0 z-50 flex lg:hidden">
+          <div
+            className="fixed inset-0 bg-background/70 backdrop-blur-sm"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <aside className="medi-sidebar relative z-10 h-full w-[268px] border-r shadow-2xl">
+            {renderSidebarBody()}
+          </aside>
+        </div>
+      )}
+
+      {/* Main Full-Bleed AI Studio */}
+      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Minimal Top Header */}
+        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-outline-variant/20 px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <button
+              type="button"
+              onClick={handleToggleSidebar}
+              aria-label="Toggle case history"
+              className="rounded-lg p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container/70 hover:text-on-surface cursor-pointer"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+              <span className="truncate text-sm font-semibold text-on-surface">
+                {activeCase ? activeCase.title : 'Medi'}
+              </span>
+            </div>
           </div>
-        )}
 
-        {/* Main Editorial AI Canvas */}
-        <section className="relative flex min-w-0 flex-1 flex-col">
-          {/* Minimal Top Bar */}
-          <header className="flex h-13 shrink-0 items-center justify-between gap-3 border-b border-outline-variant/20 px-4 sm:px-6">
-            <div className="flex min-w-0 items-center gap-2.5">
+          {visibleMessages.length > 0 && (
+            <div className="no-print flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleToggleSidebar}
-                aria-label="Toggle case history"
-                className="rounded-lg p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container/70 hover:text-on-surface cursor-pointer"
+                onClick={startNewCase}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/35 px-2.5 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary/45 hover:text-on-surface cursor-pointer"
               >
-                <PanelLeft className="h-4 w-4" />
+                <MessageSquarePlus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">New</span>
               </button>
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-                <span className="truncate text-sm font-semibold text-on-surface">
-                  {activeCase ? activeCase.title : 'Medi'}
-                </span>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                aria-label="Export PDF plan"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/35 px-2.5 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary/45 hover:text-on-surface cursor-pointer"
+              >
+                <FileDown className="h-3.5 w-3.5 text-primary" />
+                <span>PDF</span>
+              </button>
+            </div>
+          )}
+        </header>
+
+        {/* Scrollable Canvas Body */}
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleThreadScroll}
+          data-lenis-prevent
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-8"
+        >
+          {visibleMessages.length === 0 ? (
+            <div className="relative mx-auto flex min-h-full w-full max-w-2xl flex-col items-center justify-center py-10 text-center">
+              <div className="medi-aurora pointer-events-none absolute h-72 w-72 rounded-full blur-2xl" aria-hidden="true" />
+
+              <div className="medi-orb relative flex h-14 w-14 items-center justify-center rounded-2xl text-primary">
+                <Stethoscope className="h-6 w-6" />
+              </div>
+
+              <h1 className="relative mt-5 font-headline-md text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">
+                Start a clinical case
+              </h1>
+
+              {/* Centerpiece Composer */}
+              <div className="relative mt-7 w-full text-left">
+                {error && (
+                  <div
+                    role="alert"
+                    className="mb-3 flex items-center gap-2 rounded-xl border border-error/35 bg-error-container/25 px-3 py-2 text-xs text-error"
+                  >
+                    <ShieldAlert className="h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+                {renderComposer(true)}
+              </div>
+
+              <div className="relative mt-4 flex flex-wrap items-center justify-center gap-2">
+                {STARTER_PROMPTS.map(({ label, Icon, prompt }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handleSend(undefined, prompt)}
+                    className="medi-chip inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-on-surface cursor-pointer"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-primary" />
+                    <span>{label}</span>
+                  </button>
+                ))}
               </div>
             </div>
+          ) : (
+            <div className="mx-auto max-w-3xl space-y-6 pt-6 pb-36">
+              {visibleMessages.map((msg, idx) => {
+                const isUser = msg.role === 'user';
+                const isRtl = msg.language === 'ar';
 
-            {visibleMessages.length > 0 && (
-              <div className="no-print flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={startNewCase}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/35 px-2.5 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary/45 hover:text-on-surface cursor-pointer"
-                >
-                  <MessageSquarePlus className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">New</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  aria-label="Export PDF plan"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/35 px-2.5 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:border-primary/45 hover:text-on-surface cursor-pointer"
-                >
-                  <FileDown className="h-3.5 w-3.5 text-primary" />
-                  <span>PDF</span>
-                </button>
-              </div>
-            )}
-          </header>
-
-          {/* Messages / Empty Canvas */}
-          <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-8 py-6">
-            {visibleMessages.length === 0 ? (
-              <div className="relative mx-auto flex h-full max-w-2xl flex-col items-center justify-center py-8 text-center">
-                <div className="medi-aurora pointer-events-none absolute h-64 w-64 rounded-full blur-2xl" aria-hidden="true" />
-
-                <div className="medi-orb relative flex h-16 w-16 items-center justify-center rounded-2xl text-primary">
-                  <Stethoscope className="h-7 w-7" />
-                </div>
-
-                <h1 className="relative mt-6 font-headline-md text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">
-                  Start a clinical case
-                </h1>
-
-                <div className="relative mt-7 flex flex-wrap items-center justify-center gap-2.5">
-                  {STARTER_PROMPTS.map(({ label, Icon, prompt }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => handleSend(undefined, prompt)}
-                      className="medi-chip inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium text-on-surface cursor-pointer"
-                    >
-                      <Icon className="h-3.5 w-3.5 text-primary" />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="mx-auto max-w-3xl space-y-6">
-                {visibleMessages.map((msg) => {
-                  const isUser = msg.role === 'user';
-                  const isRtl = msg.language === 'ar';
-
-                  if (isUser) {
-                    return (
-                      <div key={msg.id} className="flex justify-end">
-                        <div
-                          dir={isRtl ? 'rtl' : 'ltr'}
-                          className="medi-user-msg max-w-[88%] sm:max-w-[78%] rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed"
-                        >
-                          <div className="whitespace-pre-line">{msg.content}</div>
-                        </div>
-                      </div>
-                    );
-                  }
-
+                if (isUser) {
                   return (
-                    <article key={msg.id} className="flex items-start gap-3 sm:gap-3.5">
-                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25">
-                        <Stethoscope className="h-3.5 w-3.5" />
+                    <div key={msg.id} className="medi-msg-enter flex justify-end">
+                      <div
+                        dir={isRtl ? 'rtl' : 'ltr'}
+                        className="medi-user-msg max-w-[88%] sm:max-w-[78%] rounded-[20px] rounded-tr-[6px] px-4 py-3 text-[14.5px] leading-relaxed"
+                      >
+                        <div className="whitespace-pre-line">{msg.content}</div>
                       </div>
+                    </div>
+                  );
+                }
 
-                      <div className="min-w-0 flex-1 space-y-3" dir={isRtl ? 'rtl' : 'ltr'}>
+                return (
+                  <article key={msg.id} className="medi-msg-enter flex items-start gap-3 sm:gap-3.5">
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25">
+                      <Stethoscope className="h-3.5 w-3.5" />
+                    </div>
+
+                    <div className="min-w-0 flex-1 space-y-3" dir={isRtl ? 'rtl' : 'ltr'}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-semibold text-on-surface">Medi</span>
                         {msg.structuredSummary?.urgency && (
                           <span
-                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                               URGENCY_STYLES[msg.structuredSummary.urgency]
                             }`}
                           >
                             {msg.structuredSummary.urgency}
                           </span>
                         )}
-
-                        <div className="whitespace-pre-line text-sm leading-7 text-on-surface">
-                          {msg.content}
-                        </div>
-
-                        {msg.structuredSummary &&
-                          ((msg.structuredSummary.differentials?.length ?? 0) > 0 ||
-                            (msg.structuredSummary.recommendedNextSteps?.length ?? 0) > 0) && (
-                            <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2 text-xs">
-                              {msg.structuredSummary.differentials &&
-                                msg.structuredSummary.differentials.length > 0 && (
-                                  <div className="medi-summary-card rounded-xl p-3.5">
-                                    <span className="block font-semibold uppercase tracking-wider text-primary text-[11px]">
-                                      Differentials
-                                    </span>
-                                    <ul className="mt-2 list-disc ps-4 space-y-1 text-on-surface-variant">
-                                      {msg.structuredSummary.differentials.map((d) => (
-                                        <li key={d}>{d}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-
-                              {msg.structuredSummary.recommendedNextSteps &&
-                                msg.structuredSummary.recommendedNextSteps.length > 0 && (
-                                  <div className="medi-summary-card rounded-xl p-3.5">
-                                    <span className="block font-semibold uppercase tracking-wider text-secondary text-[11px]">
-                                      Next Steps
-                                    </span>
-                                    <ul className="mt-2 list-disc ps-4 space-y-1 text-on-surface-variant">
-                                      {msg.structuredSummary.recommendedNextSteps.map((s) => (
-                                        <li key={s}>{s}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                            </div>
-                          )}
-
-                        <div className="no-print flex items-center gap-3 text-[11px] text-outline">
-                          <span>{msg.timestamp}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(msg.id, msg.content)}
-                            aria-label="Copy response"
-                            className="inline-flex items-center gap-1 transition-colors hover:text-on-surface cursor-pointer"
-                          >
-                            {copiedId === msg.id ? (
-                              <>
-                                <Check className="h-3 w-3 text-success" />
-                                <span className="text-success">Copied</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-3 w-3" />
-                                <span>Copy</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
+                        <span className="text-[11px] text-outline">{msg.timestamp}</span>
                       </div>
-                    </article>
-                  );
-                })}
 
-                {sending && (
-                  <div className="flex items-center gap-3 sm:gap-3.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25">
-                      <Stethoscope className="h-3.5 w-3.5" />
+                      <div className="whitespace-pre-line text-[14.5px] leading-7 text-on-surface">
+                        {msg.content}
+                      </div>
+
+                      {msg.structuredSummary &&
+                        ((msg.structuredSummary.differentials?.length ?? 0) > 0 ||
+                          (msg.structuredSummary.recommendedNextSteps?.length ?? 0) > 0) && (
+                          <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2 text-xs">
+                            {msg.structuredSummary.differentials &&
+                              msg.structuredSummary.differentials.length > 0 && (
+                                <div className="medi-summary-card rounded-xl border-s-2 border-s-primary/70 p-3.5">
+                                  <span className="block font-semibold uppercase tracking-wider text-primary text-[11px]">
+                                    Differentials
+                                  </span>
+                                  <ul className="mt-2 list-disc ps-4 space-y-1 text-on-surface-variant">
+                                    {msg.structuredSummary.differentials.map((d) => (
+                                      <li key={d}>{d}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                            {msg.structuredSummary.recommendedNextSteps &&
+                              msg.structuredSummary.recommendedNextSteps.length > 0 && (
+                                <div className="medi-summary-card rounded-xl border-s-2 border-s-secondary/70 p-3.5">
+                                  <span className="block font-semibold uppercase tracking-wider text-secondary text-[11px]">
+                                    Next Steps
+                                  </span>
+                                  <ul className="mt-2 list-disc ps-4 space-y-1 text-on-surface-variant">
+                                    {msg.structuredSummary.recommendedNextSteps.map((s) => (
+                                      <li key={s}>{s}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                          </div>
+                        )}
+
+                      <div className="no-print flex items-center gap-3 pt-0.5 text-[11px] text-outline">
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(msg.id, msg.content)}
+                          aria-label="Copy response"
+                          className="inline-flex items-center gap-1 transition-colors hover:text-on-surface cursor-pointer"
+                        >
+                          {copiedId === msg.id ? (
+                            <>
+                              <Check className="h-3 w-3 text-success" />
+                              <span className="text-success">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={sending}
+                          onClick={() => handleRegenerate(idx)}
+                          aria-label="Regenerate response"
+                          className="inline-flex items-center gap-1 transition-colors hover:text-on-surface disabled:opacity-40 cursor-pointer"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          <span>Regenerate</span>
+                        </button>
+                      </div>
                     </div>
-                    <TechCareLoader variant="pulse" size="sm" />
+                  </article>
+                );
+              })}
+
+              {sending && (
+                <div className="flex items-center gap-3 sm:gap-3.5">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25">
+                    <Stethoscope className="h-3.5 w-3.5" />
                   </div>
-                )}
+                  <TechCareLoader variant="pulse" size="sm" />
+                </div>
+              )}
 
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
 
-          {/* Floating Command Composer */}
-          <div className="no-print shrink-0 px-4 sm:px-8 pb-4 sm:pb-5 pt-2">
-            <div className="mx-auto max-w-3xl">
+        {/* Scroll-to-bottom Floating Action */}
+        {visibleMessages.length > 0 && showScrollDown && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom('smooth')}
+            aria-label="Scroll to latest message"
+            className="no-print absolute bottom-24 left-1/2 z-20 -translate-x-1/2 rounded-full border border-outline-variant/50 bg-surface-container/95 p-2 text-on-surface shadow-lg backdrop-blur-md transition-transform hover:-translate-y-0.5 hover:border-primary/60 cursor-pointer"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        )}
+
+        {/* Bottom Docked Composer (when conversation is active) */}
+        {visibleMessages.length > 0 && (
+          <div className="no-print medi-bottom-fade pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 sm:px-8 pt-8 pb-4 sm:pb-5">
+            <div className="pointer-events-auto mx-auto max-w-3xl">
               {error && (
                 <div
                   role="alert"
@@ -508,37 +698,11 @@ export default function MediWorkspacePage() {
                   <span>{error}</span>
                 </div>
               )}
-
-              <form onSubmit={(e) => handleSend(e)} className="medi-composer flex items-end gap-2 p-2.5 pl-4">
-                <textarea
-                  id="medi-case-input"
-                  name="clinicalCaseInput"
-                  aria-label="Clinical case input"
-                  rows={1}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder="Enter symptoms, vitals, or labs..."
-                  className="max-h-36 min-h-[38px] flex-1 resize-none bg-transparent py-2 text-sm text-on-surface placeholder:text-outline focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={sending || !input.trim()}
-                  aria-label="Send clinical case"
-                  className="auth-modern-cta inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl disabled:opacity-40 cursor-pointer"
-                >
-                  <ArrowUp className="h-4 w-4" />
-                </button>
-              </form>
+              {renderComposer(false)}
             </div>
           </div>
-        </section>
-      </div>
+        )}
+      </section>
     </div>
   );
 }

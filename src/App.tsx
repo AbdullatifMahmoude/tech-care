@@ -17,8 +17,9 @@ function ScrollHandler() {
   const { pathname, hash } = useLocation();
   const { authModalOpen, demoModalOpen } = useScene();
   const modalOpen = authModalOpen || demoModalOpen;
+  const isMediRoute = pathname === '/medi';
 
-  useSmoothScroll(modalOpen);
+  useSmoothScroll(modalOpen || isMediRoute);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -46,6 +47,35 @@ function ScrollHandler() {
   }, [pathname, hash]);
 
   return null;
+}
+
+function AppShell() {
+  const { pathname } = useLocation();
+  const isMediRoute = pathname === '/medi';
+
+  return (
+    <div className="relative flex min-h-screen flex-col bg-background text-on-surface">
+      <ThreeBackdrop />
+      <Navbar />
+
+      <main className="relative z-10 flex-1 pt-16">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/home" element={<LandingPage />} />
+            <Route path="/medi" element={<MediWorkspacePage />} />
+            <Route path="/mada" element={<MadaPage />} />
+            <Route path="/auth" element={<AuthRouteRedirect />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </main>
+
+      {!isMediRoute && <Footer />}
+      <DemoRequestModal />
+      <AuthModal />
+    </div>
+  );
 }
 
 function AuthRouteRedirect() {
@@ -103,27 +133,7 @@ export default function App() {
       <SceneProvider>
         <InitialPreloader />
         <ScrollHandler />
-        <div className="relative flex min-h-screen flex-col bg-background text-on-surface">
-          <ThreeBackdrop />
-          <Navbar />
-
-          <main className="relative z-10 flex-1 pt-16">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/home" element={<LandingPage />} />
-                <Route path="/medi" element={<MediWorkspacePage />} />
-                <Route path="/mada" element={<MadaPage />} />
-                <Route path="/auth" element={<AuthRouteRedirect />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </main>
-
-          <Footer />
-          <DemoRequestModal />
-          <AuthModal />
-        </div>
+        <AppShell />
       </SceneProvider>
     </BrowserRouter>
   );

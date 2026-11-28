@@ -915,45 +915,52 @@ html[data-theme="light"] .tc-pulse-loader {
   }
 }
 
-/* Serene Clinical AI Canvas (Medi Workspace) */
+/* Flagship Clinical AI Studio (Medi Workspace) */
 @keyframes mediOrbBreathe {
   0%,
   100% {
     transform: scale(1);
     box-shadow:
       0 0 0 1px rgba(56, 184, 172, 0.22),
-      0 18px 42px -14px rgba(56, 184, 172, 0.25);
+      0 18px 42px -14px rgba(56, 184, 172, 0.22);
   }
   50% {
     transform: scale(1.03);
     box-shadow:
-      0 0 0 1px rgba(56, 184, 172, 0.36),
-      0 22px 52px -14px rgba(56, 184, 172, 0.35);
+      0 0 0 1px rgba(56, 184, 172, 0.34),
+      0 22px 52px -14px rgba(56, 184, 172, 0.32);
   }
 }
 
-.medi-shell {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(9, 14, 24, 0.72);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 30px 90px -24px rgba(0, 0, 0, 0.72);
+@keyframes mediMsgEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-html[data-theme="light"] .medi-shell {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 28px 72px -24px rgba(15, 23, 42, 0.14);
+.medi-studio {
+  background: rgba(7, 11, 18, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+html[data-theme="light"] .medi-studio {
+  background: #fafbfd;
 }
 
 .medi-sidebar {
-  background: rgba(7, 11, 18, 0.62);
+  background: rgba(9, 14, 24, 0.92);
   border-color: rgba(255, 255, 255, 0.07);
 }
 
 html[data-theme="light"] .medi-sidebar {
-  background: #f4f7fb;
-  border-color: rgba(15, 23, 42, 0.07);
+  background: #f3f6fa;
+  border-color: rgba(15, 23, 42, 0.08);
 }
 
 .medi-aurora {
@@ -968,8 +975,8 @@ html[data-theme="light"] .medi-sidebar {
 html[data-theme="light"] .medi-aurora {
   background: radial-gradient(
     circle,
-    rgba(20, 122, 114, 0.1) 0%,
-    rgba(44, 90, 160, 0.045) 42%,
+    rgba(20, 122, 114, 0.09) 0%,
+    rgba(44, 90, 160, 0.04) 42%,
     transparent 70%
   );
 }
@@ -983,7 +990,7 @@ html[data-theme="light"] .medi-aurora {
 html[data-theme="light"] .medi-orb {
   background: linear-gradient(155deg, rgba(20, 122, 114, 0.1) 0%, #ffffff 100%);
   border: 1px solid rgba(20, 122, 114, 0.24);
-  box-shadow: 0 18px 40px -16px rgba(20, 122, 114, 0.22);
+  box-shadow: 0 18px 40px -16px rgba(20, 122, 114, 0.18);
 }
 
 .medi-chip {
@@ -1009,44 +1016,56 @@ html[data-theme="light"] .medi-chip:hover {
   background: #f8fafc;
 }
 
+.medi-bottom-fade {
+  background: linear-gradient(to top, rgba(7, 11, 18, 0.96) 62%, rgba(7, 11, 18, 0.65) 82%, transparent 100%);
+}
+
+html[data-theme="light"] .medi-bottom-fade {
+  background: linear-gradient(to top, rgba(250, 251, 253, 0.98) 62%, rgba(250, 251, 253, 0.72) 82%, transparent 100%);
+}
+
 .medi-composer {
   border-radius: 18px;
-  background: rgba(13, 21, 35, 0.88);
+  background: rgba(13, 21, 35, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 14px 36px -14px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 18px 42px -14px rgba(0, 0, 0, 0.6);
   transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
 .medi-composer:focus-within {
   border-color: var(--color-primary);
-  background: rgba(15, 24, 40, 0.96);
+  background: rgba(15, 24, 40, 0.98);
   box-shadow:
-    0 16px 40px -14px rgba(0, 0, 0, 0.6),
+    0 20px 44px -14px rgba(0, 0, 0, 0.65),
     0 0 0 3px rgba(56, 184, 172, 0.11);
 }
 
 html[data-theme="light"] .medi-composer {
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.12);
-  box-shadow: 0 12px 32px -14px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 14px 36px -14px rgba(15, 23, 42, 0.12);
 }
 
 html[data-theme="light"] .medi-composer:focus-within {
   border-color: var(--color-primary);
   box-shadow:
-    0 14px 34px -14px rgba(15, 23, 42, 0.15),
+    0 16px 38px -14px rgba(15, 23, 42, 0.15),
     0 0 0 3px rgba(20, 122, 114, 0.1);
 }
 
+.medi-msg-enter {
+  animation: mediMsgEnter 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .medi-user-msg {
-  background: rgba(56, 184, 172, 0.14);
-  border: 1px solid rgba(56, 184, 172, 0.26);
+  background: rgba(56, 184, 172, 0.13);
+  border: 1px solid rgba(56, 184, 172, 0.24);
   color: var(--color-on-surface);
 }
 
 html[data-theme="light"] .medi-user-msg {
-  background: rgba(20, 122, 114, 0.1);
-  border: 1px solid rgba(20, 122, 114, 0.2);
+  background: rgba(20, 122, 114, 0.09);
+  border: 1px solid rgba(20, 122, 114, 0.18);
 }
 
 .medi-summary-card {
@@ -1055,7 +1074,7 @@ html[data-theme="light"] .medi-user-msg {
 }
 
 html[data-theme="light"] .medi-summary-card {
-  background: #f8fafc;
+  background: #f4f7fb;
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
@@ -1066,7 +1085,8 @@ html[data-theme="light"] .medi-summary-card {
   .tc-uiverse-loader-dash,
   .tc-uiverse-loader-spin,
   .tc-pulse-bar,
-  .medi-orb {
+  .medi-orb,
+  .medi-msg-enter {
     animation: none;
   }
   .auth-modern-tab-indicator {

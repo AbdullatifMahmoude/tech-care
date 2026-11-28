@@ -111,14 +111,20 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('MediWorkspacePage renders serene captionless canvas, sends Arabic query, and renders RTL Arabic response', async () => {
-    renderWithRouter(<MediWorkspacePage />, '/medi');
+  it('MediWorkspacePage supports native independent scroll, renders flagship canvas, sends Arabic query, and renders RTL Arabic response', async () => {
+    const { container } = renderWithRouter(<MediWorkspacePage />, '/medi');
 
     expect(screen.getByText('Start a clinical case')).toBeInTheDocument();
     expect(screen.queryByText(/AI Endpoint:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/The Physician's Personal Clinical Assistant/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Acute dyspnea' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Toggle case history' })).toBeInTheDocument();
+
+    const studioRoot = container.querySelector('.medi-studio');
+    expect(studioRoot).toHaveAttribute('data-lenis-prevent');
+    const scrollThread = container.querySelector('section > .overflow-y-auto');
+    expect(scrollThread).toHaveAttribute('data-lenis-prevent');
+    expect(scrollThread).toHaveClass('min-h-0', 'overscroll-contain');
 
     const textarea = screen.getByPlaceholderText(/Enter symptoms, vitals/i);
     fireEvent.change(textarea, { target: { value: 'مريض يعاني من صداع شديد وارتفاع الضغط' } });
@@ -127,6 +133,9 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     await waitFor(() => {
       expect(screen.getByText(/ملخص التقييم السريري المبدئي/i)).toBeInTheDocument();
     });
+
+    expect(screen.getByRole('button', { name: 'Copy response' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Regenerate response' })).toBeInTheDocument();
   });
 
   it('ContactSection validates and submits contact form with confirmation receipt', async () => {
