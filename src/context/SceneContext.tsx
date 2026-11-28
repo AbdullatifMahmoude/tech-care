@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { SceneId, ThemeMode, UserSession } from '../types/techcare';
-import { getStoredSession, signInDemoAccount, signOutAccount } from '../services/authService';
+import { getStoredSession, signInDemoAccount, signOutAccount, type SignInAccountInput } from '../services/authService';
 
 interface SceneContextValue {
   activeScene: SceneId;
@@ -14,10 +14,11 @@ interface SceneContextValue {
   closeDemoModal: () => void;
   demoContextNote: string;
   authModalOpen: boolean;
-  openAuthModal: () => void;
+  authModalMode: 'signin' | 'signup';
+  openAuthModal: (mode?: 'signin' | 'signup' | unknown) => void;
   closeAuthModal: () => void;
   session: UserSession | null;
-  loginDemo: (input: { name: string; email: string; role: UserSession['role'] }) => void;
+  loginDemo: (input: SignInAccountInput) => void;
   logout: () => void;
 }
 
@@ -30,6 +31,7 @@ export function SceneProvider({ children }: { children: ReactNode }) {
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [demoContextNote, setDemoContextNote] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [session, setSession] = useState<UserSession | null>(() => getStoredSession());
 
   useEffect(() => {
@@ -56,10 +58,13 @@ export function SceneProvider({ children }: { children: ReactNode }) {
   };
 
   const closeDemoModal = () => setDemoModalOpen(false);
-  const openAuthModal = () => setAuthModalOpen(true);
+  const openAuthModal = (mode?: 'signin' | 'signup' | unknown) => {
+    setAuthModalMode(mode === 'signup' ? 'signup' : 'signin');
+    setAuthModalOpen(true);
+  };
   const closeAuthModal = () => setAuthModalOpen(false);
 
-  const loginDemo = (input: { name: string; email: string; role: UserSession['role'] }) => {
+  const loginDemo = (input: SignInAccountInput) => {
     const next = signInDemoAccount(input);
     setSession(next);
     setAuthModalOpen(false);
@@ -84,6 +89,7 @@ export function SceneProvider({ children }: { children: ReactNode }) {
         closeDemoModal,
         demoContextNote,
         authModalOpen,
+        authModalMode,
         openAuthModal,
         closeAuthModal,
         session,

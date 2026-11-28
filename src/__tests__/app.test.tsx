@@ -10,6 +10,7 @@ import MadaPage from '../pages/MadaPage';
 import { ContactSection } from '../components/contact/ContactSection';
 import { Navbar } from '../components/layout/Navbar';
 import { DemoRequestModal } from '../components/modals/DemoRequestModal';
+import { AuthModal } from '../components/modals/AuthModal';
 
 function renderWithRouter(ui: React.ReactElement, initialRoute = '/') {
   return render(
@@ -18,6 +19,7 @@ function renderWithRouter(ui: React.ReactElement, initialRoute = '/') {
         <Navbar />
         <main>{ui}</main>
         <DemoRequestModal />
+        <AuthModal />
       </SceneProvider>
     </MemoryRouter>,
   );
@@ -158,5 +160,59 @@ describe('TechCare 3D Storytelling Home & Product Flows', () => {
     expect(screen.getByText('Request a Clinical Demo')).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Close demo request modal'));
     expect(screen.queryByText('Request a Clinical Demo')).not.toBeInTheDocument();
+  });
+
+  it('AuthModal supports Tech Care Sign In and Create Account flows with password confirmation', () => {
+    renderWithRouter(<LandingPage />, '/');
+
+    // Open Sign In modal from Navbar
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign in' })[0]);
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Welcome back')).toBeInTheDocument();
+    expect(within(dialog).getByText('TechCare Bot')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Email')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Password')).toBeInTheDocument();
+
+    // Switch to Create Account view
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create account' }));
+    expect(within(dialog).getByText('Join Tech Care')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('First Name')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Last Name')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Confirm Password')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Male' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Female' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Medical Student' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Doctor' })).toBeInTheDocument();
+
+    // Mismatched passwords show validation alert and keep dialog open
+    fireEvent.change(within(dialog).getByLabelText('First Name'), { target: { value: 'Salma' } });
+    fireEvent.change(within(dialog).getByLabelText('Last Name'), { target: { value: 'Mansour' } });
+    fireEvent.change(within(dialog).getByLabelText('Email'), { target: { value: 'salma@tech-care.tech' } });
+    fireEvent.change(within(dialog).getByLabelText('Password'), { target: { value: 'secret123' } });
+    fireEvent.change(within(dialog).getByLabelText('Confirm Password'), { target: { value: 'different123' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create Account' }));
+
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Passwords do not match.');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Fix confirmation password, choose Female + Medical Student, and submit
+    fireEvent.change(within(dialog).getByLabelText('Confirm Password'), { target: { value: 'secret123' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Female' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Medical Student' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create Account' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Salma Mansour')).toBeInTheDocument();
+
+    // Sign out and verify Sign In flow works with Email + Password
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Sign in' })[0]);
+    const signInDialog = screen.getByRole('dialog');
+    fireEvent.change(within(signInDialog).getByLabelText('Email'), { target: { value: 'salma@tech-care.tech' } });
+    fireEvent.change(within(signInDialog).getByLabelText('Password'), { target: { value: 'secret123' } });
+    fireEvent.click(within(signInDialog).getByRole('button', { name: 'Sign In' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Salma Mansour')).toBeInTheDocument();
   });
 });

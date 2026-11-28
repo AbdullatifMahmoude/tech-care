@@ -115,7 +115,10 @@ export interface NewsletterPayload {
 export interface UserSession {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   role: 'Doctor' | 'Medical Student' | 'Clinic Admin';
+  gender?: 'Male' | 'Female';
   signedInAt: string;
 }
